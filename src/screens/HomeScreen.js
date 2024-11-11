@@ -1,8 +1,13 @@
 import React from "react";
-import { Text, StyleSheet } from "react-native";
+import { Text, StyleSheet, View, TouchaleOpacity } from "react-native";
 
-const HomeScreen = () => {
-  return <Text style={styles.text}>HomeScreen</Text>;
+const HomeScreen = (props) => {
+  return (<View>
+    <TouchaleOpacity
+        onPress=() => props.navigation.navigate("loginScreen")}
+        title="Go to LOGIN"
+        />
+  </View>);
 };
 
 const styles = StyleSheet.create({
