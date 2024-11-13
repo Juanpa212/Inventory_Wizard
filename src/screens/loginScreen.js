@@ -47,6 +47,9 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'center',
   },
+//   card:{
+    
+//   },
   title: {
     fontSize: 40,
     fontWeight: 'bold',
