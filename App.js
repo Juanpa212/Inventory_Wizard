@@ -5,7 +5,7 @@ import LoginScreen from "./src/screens/loginScreen";
 
 const navigator = createStackNavigator(
   {
-    Home: HomeScreen,
+    home: HomeScreen,
     login: LoginScreen
   },
   {
