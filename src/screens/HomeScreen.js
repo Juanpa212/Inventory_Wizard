@@ -3,7 +3,7 @@ import { Text, StyleSheet, View, TouchableOpacity } from "react-native";
 
 const HomeScreen = ({ navigation }) => {
   return (
-    <View styly={styles.container}>
+    <View style={styles.container}>
 
       <Text style={styles.title}>Navigation</Text>
 
@@ -14,6 +14,10 @@ const HomeScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("editor")}>
         <Text style={styles.buttonText}>Go to editor Screen</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("start_1")}>
+        <Text style={styles.buttonText}>Go to editor Screen</Text>
+      </TouchableOpacity>
     </View>
 
   );
@@ -21,24 +25,26 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#6C48C5",
     justifyContent: "center",
     alignItems: "center",
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 40,
-    textAlign: "center",
+    marginLeft: 0,
+    marginBottom: 0,
+    alignItems: "start",
+
   },
   button: {
     width: "80%",
     paddingVertical: 16,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#FFF7F7",
     borderRadius: 12,
     alignItems: "center",
     marginVertical: 10,
-    marginLeft: 30
+    marginLeft: 0
   },
   buttonText: {
     fontSize: 16,
