@@ -28,6 +28,13 @@ const HomeScreen = ({ navigation }) => {
       >
         <Text style={styles.buttonText}>Go to Start Screen</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("add")}
+      >
+        <Text style={styles.buttonText}>Go to Add Items Screen</Text>
+      </TouchableOpacity>
+
     </View>
   );
 };
