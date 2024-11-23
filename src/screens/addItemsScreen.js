@@ -1,108 +1,181 @@
-import React, { useState } from 'react';
-  import { StyleSheet, Text, View } from 'react-native';
-  import { Dropdown } from 'react-native-element-dropdown';
-  import AntDesign from '@expo/vector-icons/AntDesign';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 
-  const data = [
-    { label: 'Item 1', value: '1' },
-    { label: 'Item 2', value: '2' },
-    { label: 'Item 3', value: '3' },
-    { label: 'Item 4', value: '4' },
-    { label: 'Item 5', value: '5' },
-    { label: 'Item 6', value: '6' },
-    { label: 'Item 7', value: '7' },
-    { label: 'Item 8', value: '8' },
+const AddItemScreen = () => {
+  const [category, setCategory] = useState(null);
+  const [priority, setPriority] = useState(null);
+  const [brand, setBrand] = useState(null);
+
+  const categoryData = [
+    { label: "Stickers", value: "Stickers" },
+    { label: "Books", value: "Books" },
+    { label: "Electronics", value: "Electronics" },
   ];
 
-  const AddItemsScreen = () => {
-    const [value, setValue] = useState(null);
-    const [isFocus, setIsFocus] = useState(false);
+  const priorityData = [
+    { label: "High", value: "High" },
+    { label: "Medium", value: "Medium" },
+    { label: "Low", value: "Low" },
+  ];
 
-    const renderLabel = () => {
-      if (value || isFocus) {
-        return (
-          <Text style={[styles.label, isFocus && { color: 'blue' }]}>
-            Dropdown label
-          </Text>
-        );
-      }
-      return null;
-    };
+  const brandData = [
+    { label: "Very_OK", value: "Very_OK" },
+    { label: "Brand_X", value: "Brand_X" },
+    { label: "Brand_Y", value: "Brand_Y" },
+  ];
 
-    return (
-      <View style={styles.container}>
-        {renderLabel()}
-        <Dropdown
-          style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
-          inputSearchStyle={styles.inputSearchStyle}
-          iconStyle={styles.iconStyle}
-          data={data}
-          search
-          maxHeight={300}
-          labelField="label"
-          valueField="value"
-          placeholder={!isFocus ? 'Select item' : '...'}
-          searchPlaceholder="Search..."
-          value={value}
-          onFocus={() => setIsFocus(true)}
-          onBlur={() => setIsFocus(false)}
-          onChange={item => {
-            setValue(item.value);
-            setIsFocus(false);
-          }}
-          renderLeftIcon={() => (
-            <AntDesign
-              style={styles.icon}
-              color={isFocus ? 'blue' : 'black'}
-              name="Safety"
-              size={20}
-            />
-          )}
-        />
-      </View>
-    );
-  };
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Add Item</Text>
 
-  export default AddItemsScreen;
+      {/* Name Field */}
+      <Text style={styles.label}>
+        Name<Text style={styles.required}>*</Text>
+      </Text>
+      <TextInput style={styles.input} placeholder="Enter item name" />
 
-  const styles = StyleSheet.create({
-    container: {
-      backgroundColor: 'white',
-      padding: 16,
-    },
-    dropdown: {
-      height: 50,
-      borderColor: 'gray',
-      borderWidth: 0.5,
-      borderRadius: 8,
-      paddingHorizontal: 8,
-    },
-    icon: {
-      marginRight: 5,
-    },
-    label: {
-      position: 'absolute',
-      backgroundColor: 'white',
-      left: 22,
-      top: 8,
-      zIndex: 999,
-      paddingHorizontal: 8,
-      fontSize: 14,
-    },
-    placeholderStyle: {
-      fontSize: 16,
-    },
-    selectedTextStyle: {
-      fontSize: 16,
-    },
-    iconStyle: {
-      width: 20,
-      height: 20,
-    },
-    inputSearchStyle: {
-      height: 40,
-      fontSize: 16,
-    },
-  });
+      {/* Quantity Field */}
+      <Text style={styles.label}>
+        Quantity<Text style={styles.required}>*</Text>
+      </Text>
+      <TextInput style={styles.input} placeholder="Enter quantity" keyboardType="numeric" />
+
+      {/* Price Field */}
+      <Text style={styles.label}>
+        Price<Text style={styles.required}>*</Text>
+      </Text>
+      <TextInput style={styles.input} placeholder="Enter price" keyboardType="numeric" />
+
+      {/* Category Dropdown */}
+      <Text style={styles.label}>
+        Category<Text style={styles.required}>*</Text>
+      </Text>
+      <Dropdown
+        style={styles.dropdown}
+        data={categoryData}
+        labelField="label"
+        valueField="value"
+        placeholder="Select category"
+        value={category}
+        onChange={(item) => setCategory(item.value)}
+      />
+
+      {/* Priority Dropdown */}
+      <Text style={styles.label}>
+        Priority<Text style={styles.required}>*</Text>
+      </Text>
+      <Dropdown
+        style={styles.dropdown}
+        data={priorityData}
+        labelField="label"
+        valueField="value"
+        placeholder="Select priority"
+        value={priority}
+        onChange={(item) => setPriority(item.value)}
+      />
+
+      {/* Brand Dropdown */}
+      <Text style={styles.label}>
+        Brand<Text style={styles.required}>*</Text>
+      </Text>
+      <Dropdown
+        style={styles.dropdown}
+        data={brandData}
+        labelField="label"
+        valueField="value"
+        placeholder="Select brand"
+        value={brand}
+        onChange={(item) => setBrand(item.value)}
+      />
+
+      {/* Description Field */}
+      <Text style={styles.label}>Description</Text>
+      <TextInput
+        style={[styles.input, styles.textArea]}
+        placeholder="Enter item description..."
+        multiline
+        numberOfLines={4}
+      />
+
+      {/* Confirm Button */}
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Confirm</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.requiredText}>*Fields are required</Text>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    padding: 16,
+    backgroundColor: "#fff",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  label: {
+    width: "100%",
+    fontSize: 16,
+    fontWeight: "500",
+    marginTop: 10,
+  },
+  required: {
+    color: "red",
+  },
+  input: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginTop: 5,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: "top",
+  },
+  dropdown: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginTop: 5,
+  },
+  button: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  requiredText: {
+    fontSize: 12,
+    color: "red",
+    marginTop: 10,
+    textAlign: "center",
+  },
+});
+
+export default AddItemScreen;
