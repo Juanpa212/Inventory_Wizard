@@ -42,7 +42,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '6C48C5',
+    backgroundColor: '#C68FE6',
     padding: 20,
     justifyContent: 'center',
   },
@@ -58,11 +58,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginTop: 10,
-    color: '#333',
+    color: '#000',
   },
   input: {
     height: 40,
-    borderColor: '#ccc',
+    borderColor: '#000',
     borderWidth: 1,
     borderRadius: 8,
     paddingLeft: 10,

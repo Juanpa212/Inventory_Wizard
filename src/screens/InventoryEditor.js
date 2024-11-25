@@ -80,7 +80,7 @@ const InventoryEditor = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#C68FE6',
+    backgroundColor: '#6C48C5',
     paddingHorizontal: 16,
   },
   header: {
@@ -151,7 +151,8 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
     marginTop: 130,
-    backgroundColor: "#6C48C5",
+    backgroundColor: "#C68FE6",
+    borderRadius: 20
   },
   navText: {
     fontSize: 12,

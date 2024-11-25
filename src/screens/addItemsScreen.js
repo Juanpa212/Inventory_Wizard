@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: "#6C48C5",
     alignItems: "center",
   },
   title: {
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     height: 50,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#C68FE6",
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 5,
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   dropdown: {
     width: "100%",
     height: 50,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#C68FE6",
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 5,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   button: {
     width: "100%",
     height: 50,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#C68FE6",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
