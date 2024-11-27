@@ -17,6 +17,13 @@ const HomeScreen = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.button}
+        onPress={() => navigation.navigate("create")}
+      >
+        <Text style={styles.buttonText}>Go to Create Account Screen</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={() => navigation.navigate("editor")}
       >
         <Text style={styles.buttonText}>Go to Editor Screen</Text>
@@ -28,6 +35,7 @@ const HomeScreen = ({ navigation }) => {
       >
         <Text style={styles.buttonText}>Go to Start Screen</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate("add")}
@@ -35,6 +43,9 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Go to Add Items Screen</Text>
       </TouchableOpacity>
 
+
+      {/* Bottom Text */}
+      <Text style={styles.bottomText}>Prototype #1</Text>
     </View>
   );
 };
@@ -71,6 +82,14 @@ const styles = StyleSheet.create({
     fontSize: 18, // Slightly larger font for better readability
     color: "#6C48C5", // Matches the background for cohesive design
     fontWeight: "600", // Semi-bold for emphasis
+  },
+  bottomText: {
+    position: "absolute", // Position text at the bottom
+    bottom: 20, // Space from the bottom of the screen
+    textAlign: "center",
+    fontSize: 14,
+    color: "#FFFFFF", // White text for visibility
+    fontWeight: "bold",
   },
 });
 

@@ -17,7 +17,7 @@ const AddItemScreen = () => {
   const categoryData = [
     { label: "Stickers", value: "Stickers" },
     { label: "Books", value: "Books" },
-    { label: "Electronics", value: "Electronics" },
+    { label: "Clothing", value: "Clothing" },
   ];
 
   const priorityData = [
@@ -28,10 +28,10 @@ const AddItemScreen = () => {
 
   const brandData = [
     { label: "Very_OK", value: "Very_OK" },
-    { label: "Brand_X", value: "Brand_X" },
-    { label: "Brand_Y", value: "Brand_Y" },
+    { label: "Lil_Sad", value: "Lil_Sad" },
+    { label: "CyberGoth", value: "CyberGoth" },
   ];
-
+ 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Add Item</Text>
@@ -99,7 +99,7 @@ const AddItemScreen = () => {
       {/* Description Field */}
       <Text style={styles.label}>Description</Text>
       <TextInput
-        style={[styles.input, styles.textArea]}
+        style={[styles.input, styles.textArea,styles.placeholderText]}
         placeholder="Enter item description..."
         multiline
         numberOfLines={4}
@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 5,
+    color: "000"
   },
   textArea: {
     height: 100,
@@ -171,9 +172,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   requiredText: {
-    fontSize: 12,
+    fontSize: 16,
     color: "red",
     marginTop: 10,
+    paddingBottom: 10,
     textAlign: "center",
   },
 });
