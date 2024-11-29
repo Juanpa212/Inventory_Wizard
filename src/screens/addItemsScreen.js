@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     height: 50,
-    backgroundColor: "#C68FE6",
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 5,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   dropdown: {
     width: "100%",
     height: 50,
-    backgroundColor: "#C68FE6",
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 5,
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   button: {
     width: "100%",
     height: 50,
-    backgroundColor: "#C68FE6",
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",

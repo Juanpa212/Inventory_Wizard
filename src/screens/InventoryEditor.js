@@ -20,7 +20,7 @@ const InventoryEditor = () => {
         <TouchableOpacity style={styles.helpButton}>
           <Ionicons name="help-circle-outline" size={24} color="#888" />
         </TouchableOpacity>
-      </View>
+      </View>   
 
       {/* Title */}
       <Text style={styles.title}>Inventory Name</Text>
