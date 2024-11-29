@@ -43,6 +43,12 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Go to Add Items Screen</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("pass")}
+      >
+        <Text style={styles.buttonText}>Go to Forgot Passoword Screen</Text>
+      </TouchableOpacity>
 
       {/* Bottom Text */}
       <Text style={styles.bottomText}>Prototype #1</Text>

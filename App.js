@@ -18,6 +18,7 @@ const navigator = createStackNavigator(
     start_1 : generalStart,
     add : AddItemScreen,
     create : createAccountScreen,
+    pass : forgottenPasswordScreen,
   },
   {
     initialRouteName: "home",
