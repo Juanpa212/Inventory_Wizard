@@ -54,10 +54,10 @@ const HomeScreen = ({ navigation }) => {
         style={styles.button}
         onPress={() => navigation.navigate("invManager")}
       >
-        <Text style={styles.buttonText}>Go to Inventory Manager Screen</Text>
+        <Text style={styles.buttonText}>Go to Invoice Manager Screen</Text>
       </TouchableOpacity>
       {/* Bottom Text */}
-      <Text style={styles.bottomText}>Prototype #1</Text>
+      <Text style={styles.bottomText}>Prototype #2</Text>
     </View>
   );
 };

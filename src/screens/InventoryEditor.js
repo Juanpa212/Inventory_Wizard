@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-} from 'react-native';
-import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
+} from "react-native";
+import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
 
 const InventoryEditor = () => {
   return (
@@ -18,58 +18,59 @@ const InventoryEditor = () => {
           <Text style={styles.employeeViewText}>Employee View</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.helpButton}>
-          <Ionicons name="help-circle-outline" size={24} color="#888" />
+          <Ionicons name="help-circle-outline" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-      </View>   
+      </View>
 
       {/* Title */}
-      <Text style={styles.title}>Inventory Name</Text>
+      <Text style={styles.title}>Inventory Manager</Text>
 
       {/* Search Bar */}
       <View style={styles.searchBar}>
         <TextInput
-          placeholder="Hinted search text"
+          placeholder="Search inventory..."
+          placeholderTextColor="#aaa"
           style={styles.searchInput}
         />
-        <MaterialIcons name="search" size={24} color="#888" />
+        <MaterialIcons name="search" size={24} color="#6C48C5" />
       </View>
 
       {/* Buttons Section */}
       <View style={styles.buttonGrid}>
         <TouchableOpacity style={styles.button}>
-          <FontAwesome5 name="pen" size={24} color="#000" />
+          <FontAwesome5 name="pen" size={24} color="#6C48C5" />
           <Text style={styles.buttonText}>Manage Items</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button}>
-          <FontAwesome5 name="box-open" size={24} color="#000" />
+          <FontAwesome5 name="file-invoice" size={24} color="#6C48C5" />
           <Text style={styles.buttonText}>Manage Invoices</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button}>
-          <Ionicons name="bar-chart-outline" size={24} color="#000" />
-          <Text style={styles.buttonText}>Check Stock Levels</Text>
+          <Ionicons name="bar-chart-outline" size={24} color="#6C48C5" />
+          <Text style={styles.buttonText}>Check Stock</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button}>
-          <Ionicons name="information-circle-outline" size={24} color="#000" />
+          <Ionicons name="information-circle-outline" size={24} color="#6C48C5" />
           <Text style={styles.buttonText}>Inventory Data</Text>
         </TouchableOpacity>
       </View>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity>
-          <Ionicons name="home-outline" size={24} color="#000" />
+        <TouchableOpacity style={styles.navButton}>
+          <Ionicons name="home-outline" size={24} color="#FFFFFF" />
           <Text style={styles.navText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome5 name="boxes" size={24} color="#000" />
+        <TouchableOpacity style={styles.navButton}>
+          <FontAwesome5 name="boxes" size={24} color="#FFFFFF" />
           <Text style={styles.navText}>Items</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="receipt-outline" size={24} color="#000" />
+        <TouchableOpacity style={styles.navButton}>
+          <Ionicons name="receipt-outline" size={24} color="#FFFFFF" />
           <Text style={styles.navText}>Invoices</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="settings-outline" size={24} color="#000" />
+        <TouchableOpacity style={styles.navButton}>
+          <Ionicons name="settings-outline" size={24} color="#FFFFFF" />
           <Text style={styles.navText}>Settings</Text>
         </TouchableOpacity>
       </View>
@@ -80,82 +81,99 @@ const InventoryEditor = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6C48C5',
+    backgroundColor: "#6C48C5",
     paddingHorizontal: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 16,
   },
   employeeViewButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   employeeViewText: {
     fontSize: 14,
-    color: '#000',
+    color: "#6C48C5",
   },
   helpButton: {
     padding: 8,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    textAlign: "center",
     marginVertical: 16,
   },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 40,
-    marginBottom: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 50,
+    marginBottom: 100,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
+    color: "#333",
   },
   buttonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-    marginTop: 150
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 30,
   },
   button: {
-    width: '48%',
-    backgroundColor: '#e0e0e0',
+    width: "48%",
+    backgroundColor: "#FFFFFF",
     paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
+    borderRadius: 12,
+    alignItems: "center",
     marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   buttonText: {
     marginTop: 8,
     fontSize: 14,
-    color: '#000',
-    textAlign: 'center',
+    color: "#6C48C5",
+    textAlign: "center",
   },
   bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: '#ccc',
+    borderTopColor: "#ccc",
     paddingTop: 8,
     paddingBottom: 16,
-    marginTop: 130,
-    backgroundColor: "#C68FE6",
-    borderRadius: 20
+    backgroundColor: "#4B2E83",
+    borderRadius: 20,
+    marginTop: 150,
+  },
+  navButton: {
+    alignItems: "center",
   },
   navText: {
     fontSize: 12,
+    color: "#FFFFFF",
     marginTop: 4,
   },
 });
