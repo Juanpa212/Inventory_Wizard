@@ -8,7 +8,27 @@ import {
   SafeAreaView,
 } from "react-native";
 import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import SQLite from "react-native-sqlite-storage";
 
+const db = SQLite.openDatabase(
+  {
+    name: "MainDB",
+    location: "default",
+
+  },
+  ()=>{ },
+  error => {console.log(error)}
+)
+
+const createTable = () => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      "CREATE TABLE IF NOT EXIST "
+      + "Users "
+      + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, EMAIL-OR-PHONE_NUMBER TEXT, Password TEXT"
+    )
+  })
+}
 const InventoryEditor = () => {
   return (
     <SafeAreaView style={styles.container}>
@@ -51,7 +71,7 @@ const InventoryEditor = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.button}>
           <Ionicons name="information-circle-outline" size={24} color="#6C48C5" />
-          <Text style={styles.buttonText}>Inventory Data</Text>
+          <Text style={styles.buttonText}>Stock Analysis</Text>
         </TouchableOpacity>
       </View>
 
