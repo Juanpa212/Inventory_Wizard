@@ -1,8 +1,82 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import React, {useState} from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons'; // Import user icon
+import SQlite from "react-native-sqlite-storage";
+
+
+const db = SQLite.openDatabase(
+  {
+      name: 'MainDB',
+      location: 'default',
+  },
+  () => { },
+  error => { console.log(error) }
+);
+
 
 const createAccountScreen = ({ navigation }) => {
+  const [userName, setUser] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+
+  const getData = () => {
+      try {
+          db.transaction((tx) => {
+            tx.executeSql(
+                "SELECT userName, email, password FROM Users",
+                [],
+                (tx, results) => {
+                     var len = results.rows.length;
+                     if (len > 0) {
+                        //  var iden = results.rows.item(0).id;
+                         var userName = results.rows.item(0).userName;
+                         var eM = results.rows.item(0).email;
+                         var pass = results.rows.item(0).password;
+                        //  setID(iden);
+                         setUser(userName);
+                         setEmail(eM);
+                         setPassword(pass);
+                    }
+                }
+            )
+        })
+    } catch (error) {
+        console.log(error);
+    }
+    }
+  useEffect(() => {
+    getData()
+  },[]); //RUNS ONLY ONCE ON MOUNT
+
+  const createTable = () =>{
+    db.transaction((tx) => {
+      tx.executeSql(
+        "CREATE TABLE IF NOT EXISTS" + 
+        + "Users" 
+        + "(id INTEGER PRIMARY KEY AUTOINCREMENT, Username TEXT NOT NULL, Password TEXT NOT NULL, Email TEXT UNIQUE NOT NULL );"
+      )
+    })
+  }
+
+  const addUser =  async() =>{
+    if(userName.length == 0 || password.length == 0 || email.length == 0){
+      Alert.alert("Warning!","Please write your data.")
+    }
+    else{
+      try{
+        await db.transaction(async (tx) => {
+          await tx.executeSql(
+            "INSERT INTO Users (userName, password, email) VALUES (?,?,?)",
+            [userName,password,email]
+          );
+        })
+        navigation.navigate("#");
+      }catch (error) {
+        console.log(error);
+      }
+    }
+  }
+
   return (
     <View style={styles.container}>
       {/* Title */}

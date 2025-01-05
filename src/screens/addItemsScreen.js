@@ -14,6 +14,10 @@ const AddItemScreen = () => {
   const [priority, setPriority] = useState(null);
   const [brand, setBrand] = useState(null);
 
+  
+  //Not sure if  necessary to track confirm yet 
+  // const [confirm, setConfirm] = useState(false);
+
   const categoryData = [
     { label: "Stickers", value: "Stickers" },
     { label: "Books", value: "Books" },
@@ -31,6 +35,14 @@ const AddItemScreen = () => {
     { label: "Lil_Sad", value: "Lil_Sad" },
     { label: "CyberGoth", value: "CyberGoth" },
   ];
+
+
+
+  // const onClickHandler = () => {
+  //   console.log(categoryData)
+  //   console.log(priorityData);
+  //   console.log(brandData);
+  // }
  
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -106,7 +118,7 @@ const AddItemScreen = () => {
       />
 
       {/* Confirm Button */}
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={onClickHandler}>
         <Text style={styles.buttonText}>Confirm</Text>
       </TouchableOpacity>
 

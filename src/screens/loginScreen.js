@@ -1,8 +1,85 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import React, {useState,useEffect} from 'react';
 import { FontAwesome } from '@expo/vector-icons'; // Import user icon
+import SQlite from "react-native-sqlite-storage";
+import {AsyncStorage} from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  StyleSheet, 
+  TouchableOpacity 
+} from 'react-native';
+
+
+const db = SQlite.openDatabase(
+  {
+    name:"MainDB",
+    location:"default",
+  },
+  () => { },
+  error => {console.log(error)}
+);
+
 
 const LoginScreen = ({ navigation }) => {
+
+  // const [name, setName] = useState("");
+  // const [id, setID] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const getData = () => {
+      try {
+          db.transaction((tx) => {
+            tx.executeSql(
+                "SELECT email, password FROM Users",
+                [],
+                (tx, results) => {
+                     var len = results.rows.length;
+                     if (len > 0) {
+                        //  var iden = results.rows.item(0).id;
+                        //  var userName = results.rows.item(0).name;
+                         var eM = results.rows.item(0).email;
+                         var pass = results.rows.item(0).password;
+                        //  setID(iden);
+                        //  setName(userName);
+                         setEmail(eM);
+                         setPassword(pass);
+                    }
+                }
+            )
+        })
+    } catch (error) {
+        console.log(error);
+    }
+    }
+  useEffect(() => {
+    getData()
+  },[]); //RUNS ONLY ONCE ON MOUNT
+
+
+
+  const validateLogin = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `SELECT * FROM Users WHERE email = ? AND password = ?;`,
+        [email, password],
+        (tx, results) => {
+          if (results.rows.length > 0) {
+            const user = results.rows.item(0);
+            console.log("Login successful for user:", user.username);
+            navigation.navigate("editor"); // Navigate to dashboard or home
+          } else {
+            alert("Invalid email or password.");
+          }
+        },
+        (txObj, error) => {
+          console.log("Error during login:", error);
+        }
+      );
+    });
+  };
+  
+
   return (
     <View style={styles.container}>
       {/* Title */}
@@ -29,7 +106,7 @@ const LoginScreen = ({ navigation }) => {
       />
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.loginButton}>
+      <TouchableOpacity style={styles.loginButton} onPress={validateLogin}>
         <Text style={styles.loginButtonText}>Login</Text>
       </TouchableOpacity>
 
