@@ -15,39 +15,19 @@ const db = SQLite.openDatabase(
 
 
 const createAccountScreen = ({ navigation }) => {
+
+  // variables that change on each run 
   const [userName, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
-  const getData = () => {
-      try {
-          db.transaction((tx) => {
-            tx.executeSql(
-                "SELECT userName, email, password FROM Users",
-                [],
-                (tx, results) => {
-                     var len = results.rows.length;
-                     if (len > 0) {
-                        //  var iden = results.rows.item(0).id;
-                         var userName = results.rows.item(0).userName;
-                         var eM = results.rows.item(0).email;
-                         var pass = results.rows.item(0).password;
-                        //  setID(iden);
-                         setUser(userName);
-                         setEmail(eM);
-                         setPassword(pass);
-                    }
-                }
-            )
-        })
-    } catch (error) {
-        console.log(error);
-    }
-    }
   useEffect(() => {
-    getData()
+    createTable();
+    getData();
   },[]); //RUNS ONLY ONCE ON MOUNT
 
+
+  // creating a table 
   const createTable = () =>{
     db.transaction((tx) => {
       tx.executeSql(
@@ -58,7 +38,29 @@ const createAccountScreen = ({ navigation }) => {
     })
   }
 
-  const addUser =  async() =>{
+  // getting the data 
+  const getData = () => {
+      try {
+          db.transaction((tx) => {
+            tx.executeSql(
+                "SELECT userName, email, password FROM Users",
+                [],
+                (tx, results) => {
+                     var len = results.rows.length;
+                     if (len > 0) {
+                      navigation.navigate("#");
+                }
+              }
+            )
+        })
+    } catch (error) {
+        console.log(error);
+    }
+  }
+
+
+// sets the data into the into the table 
+  const setData =  async() =>{
     if(userName.length == 0 || password.length == 0 || email.length == 0){
       Alert.alert("Warning!","Please write your data.")
     }
@@ -92,12 +94,14 @@ const createAccountScreen = ({ navigation }) => {
       <TextInput 
         style={styles.input} 
         placeholder="Enter username" 
+        onChangeText={(value) => setUser(value)}
       />
 
-    <Text style={styles.label}>Email /Phone Number</Text>
+    <Text style={styles.label}>Email </Text>
       <TextInput 
         style={styles.input} 
-        placeholder="Enter Email / Phone Number" 
+        placeholder="Enter Email / Phone Number"
+        onChangeText={(value) => setEmail(value)} 
       />
       {/* Password Input */}
       <Text style={styles.label}>Password</Text>
@@ -105,10 +109,11 @@ const createAccountScreen = ({ navigation }) => {
         style={styles.input} 
         placeholder="Enter password" 
         secureTextEntry 
+        onChangeText={(value) => setPassword(value)}
       />
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.loginButton}>
+      <TouchableOpacity style={styles.loginButton} onPress={setData}>
         <Text style={styles.loginButtonText}>Login</Text>
       </TouchableOpacity>
 
