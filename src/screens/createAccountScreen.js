@@ -1,22 +1,18 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons'; // Import user icon
-import SQlite from "react-native-sqlite-storage";
-
+import SQLite from "react-native-sqlite-storage";
 
 const db = SQLite.openDatabase(
   {
-      name: 'MainDB',
-      location: 'default',
+    name: 'MainDB',
+    location: 'default',
   },
-  () => { },
-  error => { console.log(error) }
+  () => { console.log("Database opened successfully"); },
+  error => { console.log("Error opening database:", error); }
 );
 
-
-const createAccountScreen = ({ navigation }) => {
-
-  // variables that change on each run 
+const CreateAccountScreen = ({ navigation }) => {
   const [userName, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -24,107 +20,91 @@ const createAccountScreen = ({ navigation }) => {
   useEffect(() => {
     createTable();
     getData();
-  },[]); //RUNS ONLY ONCE ON MOUNT
+  }, []); // Runs once on mount
 
-
-  // creating a table 
-  const createTable = () =>{
+  // Create the Users table
+  const createTable = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS" + 
-        + "Users" 
-        + "(id INTEGER PRIMARY KEY AUTOINCREMENT, Username TEXT NOT NULL, Password TEXT NOT NULL, Email TEXT UNIQUE NOT NULL );"
-      )
-    })
-  }
+        "CREATE TABLE IF NOT EXISTS Users (id INTEGER PRIMARY KEY AUTOINCREMENT, Username TEXT NOT NULL, Password TEXT NOT NULL, Email TEXT UNIQUE NOT NULL);"
+      );
+    });
+  };
 
-  // getting the data 
+  // Fetch data
   const getData = () => {
-      try {
-          db.transaction((tx) => {
-            tx.executeSql(
-                "SELECT userName, email, password FROM Users",
-                [],
-                (tx, results) => {
-                     var len = results.rows.length;
-                     if (len > 0) {
-                      navigation.navigate("#");
-                }
-              }
-            )
-        })
+    try {
+      db.transaction((tx) => {
+        tx.executeSql(
+          "SELECT * FROM Users",
+          [],
+          (tx, results) => {
+            if (results.rows.length > 0) {
+              navigation.navigate("StartScreen"); // Navigate if data exists
+            }
+          }
+        );
+      });
     } catch (error) {
-        console.log(error);
+      console.log("Error fetching data:", error);
     }
-  }
+  };
 
-
-// sets the data into the into the table 
-  const setData =  async() =>{
-    if(userName.length == 0 || password.length == 0 || email.length == 0){
-      Alert.alert("Warning!","Please write your data.")
-    }
-    else{
-      try{
+  // Insert data into the table
+  const setData = async () => {
+    if (userName.length === 0 || password.length === 0 || email.length === 0) {
+      Alert.alert("Warning!", "Please fill in all fields.");
+    } else {
+      try {
         await db.transaction(async (tx) => {
           await tx.executeSql(
-            "INSERT INTO Users (userName, password, email) VALUES (?,?,?)",
-            [userName,password,email]
+            "INSERT INTO Users (Username, Password, Email) VALUES (?, ?, ?);",
+            [userName, password, email]
           );
-        })
-        navigation.navigate("#");
-      }catch (error) {
-        console.log(error);
+        });
+        Alert.alert("Success", "Account created successfully!");
+        navigation.navigate("StartScreen");
+      } catch (error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+          Alert.alert("Error", "Email already exists!");
+        } else {
+          console.log("Error inserting data:", error);
+        }
       }
     }
-  }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Title */}
       <Text style={styles.title}>Create your account</Text>
-
-      {/* User Icon */}
       <View style={styles.iconContainer}>
-        <FontAwesome name="user-circle" size={80} color="#0000" />
+        <FontAwesome name="user-circle" size={80} color="#000" />
       </View>
 
-      {/* Username Input */}
       <Text style={styles.label}>Username</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Enter username" 
+      <TextInput
+        style={styles.input}
+        placeholder="Enter username"
         onChangeText={(value) => setUser(value)}
       />
 
-    <Text style={styles.label}>Email </Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Enter Email / Phone Number"
-        onChangeText={(value) => setEmail(value)} 
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter email"
+        onChangeText={(value) => setEmail(value)}
       />
-      {/* Password Input */}
+
       <Text style={styles.label}>Password</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Enter password" 
-        secureTextEntry 
+      <TextInput
+        style={styles.input}
+        placeholder="Enter password"
+        secureTextEntry
         onChangeText={(value) => setPassword(value)}
       />
 
-      {/* Login Button */}
       <TouchableOpacity style={styles.loginButton} onPress={setData}>
-        <Text style={styles.loginButtonText}>Login</Text>
-      </TouchableOpacity>
-
-      {/* Forgot Password */}
-      <TouchableOpacity onPress={() => {navigation.navigate("forgor")}}>
-        <Text style={styles.forgotPassword}>Forgot password?</Text>
-      </TouchableOpacity>
-
-      {/* Create Account */}
-      <TouchableOpacity onPress={() => {navigation.navigate("create")}}>
-        <Text style={styles.createAccount}>Create Account</Text>
+        <Text style={styles.loginButtonText}>Create Account</Text>
       </TouchableOpacity>
     </View>
   );
@@ -168,20 +148,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginButtonText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
-  forgotPassword: {
-    color: '#6C48C5',
-    textAlign: 'center',
-    marginTop: 15,
-  },
-  createAccount: {
-    color: '#6C48C5',
-    textAlign: 'center',
-    marginTop: 10,
-  },
 });
 
-export default createAccountScreen;
+export default CreateAccountScreen;

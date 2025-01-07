@@ -1,85 +1,48 @@
-import React, {useState,useEffect} from 'react';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons'; // Import user icon
-import SQlite from "react-native-sqlite-storage";
-import {AsyncStorage} from 'react-native';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  StyleSheet, 
-  TouchableOpacity 
-} from 'react-native';
+import SQLite from "react-native-sqlite-storage";
 
-
-const db = SQlite.openDatabase(
+const db = SQLite.openDatabase(
   {
-    name:"MainDB",
-    location:"default",
+    name: "MainDB",
+    location: "default",
   },
-  () => { },
-  error => {console.log(error)}
+  () => { console.log("Database opened successfully"); },
+  error => { console.log("Error opening database:", error); }
 );
 
-
 const LoginScreen = ({ navigation }) => {
-
-  // const [name, setName] = useState("");
-  // const [id, setID] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const getData = () => {
-      try {
-          db.transaction((tx) => {
-            tx.executeSql(
-                "SELECT email, password FROM Users",
-                [],
-                (tx, results) => {
-                     var len = results.rows.length;
-                     if (len > 0) {
-                        //  var iden = results.rows.item(0).id;
-                        //  var userName = results.rows.item(0).name;
-                         var eM = results.rows.item(0).email;
-                         var pass = results.rows.item(0).password;
-                        //  setID(iden);
-                        //  setName(userName);
-                         setEmail(eM);
-                         setPassword(pass);
-                    }
-                }
-            )
-        })
-    } catch (error) {
-        console.log(error);
-    }
-    }
-  useEffect(() => {
-    getData()
-  },[]); //RUNS ONLY ONCE ON MOUNT
-
-
 
   const validateLogin = () => {
+    if (email.length === 0 || password.length === 0) {
+      Alert.alert("Error", "Please enter your email and password.");
+      return;
+    }
+  
     db.transaction((tx) => {
       tx.executeSql(
-        `SELECT * FROM Users WHERE email = ? AND password = ?;`,
+        "SELECT * FROM Users WHERE Email = ? AND Password = ?;",
         [email, password],
         (tx, results) => {
           if (results.rows.length > 0) {
-            const user = results.rows.item(0);
-            console.log("Login successful for user:", user.username);
-            navigation.navigate("editor"); // Navigate to dashboard or home
+            const user = results.rows.item(0); // Access user data safely
+            Alert.alert("Success", `Welcome, ${user.Username}!`);
+            navigation.navigate("editor");
           } else {
-            alert("Invalid email or password.");
+            Alert.alert("Error", "Invalid email or password.");
           }
         },
         (txObj, error) => {
           console.log("Error during login:", error);
+          Alert.alert("Error", "Something went wrong during login.");
         }
       );
     });
   };
   
-
   return (
     <View style={styles.container}>
       {/* Title */}
@@ -87,22 +50,27 @@ const LoginScreen = ({ navigation }) => {
 
       {/* User Icon */}
       <View style={styles.iconContainer}>
-        <FontAwesome name="user-circle" size={80} color="#0000" />
+        <FontAwesome name="user-circle" size={80} color="#6C48C5" />
       </View>
 
-      {/* Username Input */}
-      <Text style={styles.label}>Username</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Enter username" 
+      {/* Email Input */}
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your email"
+        keyboardType="email-address"
+        onChangeText={(value) => setEmail(value)}
+        value={email}
       />
 
       {/* Password Input */}
       <Text style={styles.label}>Password</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Enter password" 
-        secureTextEntry 
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your password"
+        secureTextEntry
+        onChangeText={(value) => setPassword(value)}
+        value={password}
       />
 
       {/* Login Button */}
@@ -111,12 +79,12 @@ const LoginScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       {/* Forgot Password */}
-      <TouchableOpacity onPress={() => {navigation.navigate("forgor")}}>
+      <TouchableOpacity onPress={() => navigation.navigate("forgotPassword")}>
         <Text style={styles.forgotPassword}>Forgot password?</Text>
       </TouchableOpacity>
 
       {/* Create Account */}
-      <TouchableOpacity onPress={() => {navigation.navigate("create")}}>
+      <TouchableOpacity onPress={() => navigation.navigate("create")}>
         <Text style={styles.createAccount}>Create Account</Text>
       </TouchableOpacity>
     </View>
@@ -161,7 +129,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginButtonText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
