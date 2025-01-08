@@ -10,9 +10,9 @@ import {
 import { Dropdown } from "react-native-element-dropdown";
 
 const AddItemScreen = () => {
-  const [category, setCategory] = useState(null);
-  const [priority, setPriority] = useState(null);
-  const [brand, setBrand] = useState(null);
+  const [category, setCategory] = useState(" ");
+  const [priority, setPriority] = useState(" ");
+  const [brand, setBrand] = useState(" ");
 
   
   //Not sure if  necessary to track confirm yet 

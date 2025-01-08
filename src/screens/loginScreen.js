@@ -1,48 +1,64 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons'; // Import user icon
-import SQLite from "react-native-sqlite-storage";
+import { FontAwesome } from '@expo/vector-icons';
+import * as SQLite from 'expo-sqlite';
 
-const db = SQLite.openDatabase(
-  {
-    name: "MainDB",
-    location: "default",
-  },
-  () => { console.log("Database opened successfully"); },
-  error => { console.log("Error opening database:", error); }
-);
+// Open the database
+const db = SQLite.openDatabase("MainDB.db");
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // Ensure the database and Users table exist
+  const initializeDatabase = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          Username TEXT,
+          Email TEXT UNIQUE,
+          Password TEXT
+        );`,
+        [],
+        () => console.log("Table created successfully"),
+        (_, error) => console.log("Error creating table:", error)
+      );
+    });
+  };
+
+  // Validate login credentials
   const validateLogin = () => {
     if (email.length === 0 || password.length === 0) {
       Alert.alert("Error", "Please enter your email and password.");
       return;
     }
-  
+
     db.transaction((tx) => {
       tx.executeSql(
-        "SELECT * FROM Users WHERE Email = ? AND Password = ?;",
+        "SELECT * FROM Users WHERE Email = ? AND Password = ?",
         [email, password],
-        (tx, results) => {
-          if (results.rows.length > 0) {
-            const user = results.rows.item(0); // Access user data safely
+        (_, { rows }) => {
+          if (rows.length > 0) {
+            const user = rows._array[0]; // Access user data safely
             Alert.alert("Success", `Welcome, ${user.Username}!`);
             navigation.navigate("editor");
           } else {
             Alert.alert("Error", "Invalid email or password.");
           }
         },
-        (txObj, error) => {
+        (_, error) => {
           console.log("Error during login:", error);
           Alert.alert("Error", "Something went wrong during login.");
         }
       );
     });
   };
-  
+
+  React.useEffect(() => {
+    initializeDatabase();
+  }, []);
+
   return (
     <View style={styles.container}>
       {/* Title */}

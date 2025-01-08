@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -8,28 +8,34 @@ import {
   SafeAreaView,
 } from "react-native";
 import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
-import SQLite from "react-native-sqlite-storage";
+import * as SQLite from "expo-sqlite";
 
-// const db = SQLite.openDatabase(
-//   {
-//     name: "MainDB",
-//     location: "default",
+// Open the database
+const db = SQLite.openDatabase("MainDB.db");
 
-//   },
-//   ()=>{ },
-//   error => {console.log(error)}
-// )
+// Function to create the table
+const createTable = () => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      `CREATE TABLE IF NOT EXISTS Users (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Name TEXT,
+        EmailOrPhoneNumber TEXT,
+        Password TEXT
+      );`,
+      [],
+      () => console.log("Table created successfully"),
+      (_, error) => console.log("Error creating table:", error)
+    );
+  });
+};
 
-// const createTable = () => {
-//   db.transaction((tx) => {
-//     tx.executeSql(
-//       "CREATE TABLE IF NOT EXIST "
-//       + "Users "
-//       + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, EMAIL-OR-PHONE_NUMBER TEXT, Password TEXT"
-//     )
-//   })
-// }
 const InventoryEditor = () => {
+  // Ensure the database and table are initialized
+  useEffect(() => {
+    createTable();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header Section */}
@@ -100,7 +106,7 @@ const InventoryEditor = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // makes it so container is in the middle
+    flex: 1,
     backgroundColor: "#6C48C5",
     paddingHorizontal: 16,
   },
