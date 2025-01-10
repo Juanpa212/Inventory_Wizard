@@ -10,7 +10,8 @@ const HomeScreen = ({ navigation }) => {
       {/* Image */}
       <View style={styles.imageContainer}>
         <Image 
-          source={require("../images/icons/inventory_wizard_icon.jpg")}
+          // source={require(".../assets/icons/inventory_wizard_icon.png")}
+          source={require("../../assets/icons/inventory_wizard_icon.jpg")}
           style={styles.imageStyle} 
         />
       </View>

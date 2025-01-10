@@ -15,7 +15,7 @@ const CreateAccountScreen = ({ navigation }) => {
   //   checkExistingData();
   // }, []);
 
-  // // Create the Users table
+  // Create the Users table
   // const createTable = () => {
   //   db.transaction((tx) => {
   //     tx.executeSql(

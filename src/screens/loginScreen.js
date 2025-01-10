@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import * as SQLite from 'expo-sqlite';
-
-// // Open the database
+// import * as SQLite from 'expo-sqlite';
+// import * as SQLite from 'expo-sqlite/legacy';
+// Open the database
 // const db = SQLite.openDatabase("MainDB.db");
 
 const LoginScreen = ({ navigation }) => {
