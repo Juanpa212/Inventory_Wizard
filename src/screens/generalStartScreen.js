@@ -1,17 +1,27 @@
 import React from "react";
-import { Text, StyleSheet, View, TouchableOpacity } from "react-native";
+import { Text, StyleSheet, View, TouchableOpacity, Image } from "react-native";
 
 const StartScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Title */}
       <Text style={styles.title}>Inventory Wizard</Text>
+      {/* Image */}
+
+      <View style={styles.imageContainer}>
+        <Image 
+          source={require("../../assets/icons/inventory_wizard_icon.jpg")}
+          style={styles.imageStyle} 
+        />
+      </View>
+      
 
       {/* Buttons */}
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate("createInventory")}
       >
+
         <Text style={styles.buttonText}>Create Inventory</Text>
       </TouchableOpacity>
 
@@ -57,6 +67,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#6C48C5",
     fontWeight: "600", 
+  },
+  imageContainer: {
+    alignItems: "center",
+    marginBottom: 20, // Space between image and buttons
+  },
+  imageStyle: {
+    height: 150,
+    width: 150,
+    resizeMode: "contain", // Ensure the image retains its aspect ratio
   },
 });
 

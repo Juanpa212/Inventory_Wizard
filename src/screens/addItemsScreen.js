@@ -118,7 +118,10 @@ const AddItemScreen = () => {
       />
 
       {/* Confirm Button */}
-      <TouchableOpacity style={styles.button} onPress={onClickHandler}>
+      <TouchableOpacity 
+        style={styles.button} 
+        // onPress={onClickHandler}
+      >
         <Text style={styles.buttonText}>Confirm</Text>
       </TouchableOpacity>
 

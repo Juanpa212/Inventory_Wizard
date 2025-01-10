@@ -1,207 +1,133 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-} from "react-native";
-import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
-import * as SQLite from "expo-sqlite";
+import React from "react";
+import { Text, StyleSheet, View, TouchableOpacity, Image } from "react-native";
 
-// Open the database
-const db = SQLite.openDatabase("MainDB.db");
-
-// Function to create the table
-const createTable = () => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      `CREATE TABLE IF NOT EXISTS Users (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        Name TEXT,
-        EmailOrPhoneNumber TEXT,
-        Password TEXT
-      );`,
-      [],
-      () => console.log("Table created successfully"),
-      (_, error) => console.log("Error creating table:", error)
-    );
-  });
-};
-
-const InventoryEditor = () => {
-  // Ensure the database and table are initialized
-  useEffect(() => {
-    createTable();
-  }, []);
-
+const HomeScreen = ({ navigation }) => {
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.employeeViewButton}>
-          <Text style={styles.employeeViewText}>Employee View</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.helpButton}>
-          <Ionicons name="help-circle-outline" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
+    <View style={styles.container}>
       {/* Title */}
-      <Text style={styles.title}>Inventory Manager</Text>
+      <Text style={styles.title}>Inventory Wizard</Text>
 
-      {/* Search Bar */}
-      <View style={styles.searchBar}>
-        <TextInput
-          placeholder="Search inventory..."
-          placeholderTextColor="#aaa"
-          style={styles.searchInput}
+      {/* Image */}
+      <View style={styles.imageContainer}>
+        <Image 
+          source={require("../images/icons/inventory_wizard_icon.jpg")}
+          style={styles.imageStyle} 
         />
-        <MaterialIcons name="search" size={24} color="#6C48C5" />
       </View>
 
-      {/* Buttons Section */}
-      <View style={styles.buttonGrid}>
-        <TouchableOpacity style={styles.button}>
-          <FontAwesome5 name="pen" size={24} color="#6C48C5" />
-          <Text style={styles.buttonText}>Manage Items</Text>
+      {/* Buttons */}
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("login")}
+        >
+          <Text style={styles.buttonText}>Go to Login Screen</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <FontAwesome5 name="file-invoice" size={24} color="#6C48C5" />
-          <Text style={styles.buttonText}>Manage Invoices</Text>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("create")}
+        >
+          <Text style={styles.buttonText}>Go to Create Account Screen</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Ionicons name="bar-chart-outline" size={24} color="#6C48C5" />
-          <Text style={styles.buttonText}>Check Stock</Text>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("editor")}
+        >
+          <Text style={styles.buttonText}>Go to Editor Screen</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Ionicons name="information-circle-outline" size={24} color="#6C48C5" />
-          <Text style={styles.buttonText}>Stock Analysis</Text>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("start_1")}
+        >
+          <Text style={styles.buttonText}>Go to Start Screen</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("add")}
+        >
+          <Text style={styles.buttonText}>Go to Add Items Screen</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("pass")}
+        >
+          <Text style={styles.buttonText}>Go to Forgot Password Screen</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("invManager")}
+        >
+          <Text style={styles.buttonText}>Go to Invoice Manager Screen</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="home-outline" size={24} color="#FFFFFF" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <FontAwesome5 name="boxes" size={24} color="#FFFFFF" />
-          <Text style={styles.navText}>Items</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="receipt-outline" size={24} color="#FFFFFF" />
-          <Text style={styles.navText}>Invoices</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="settings-outline" size={24} color="#FFFFFF" />
-          <Text style={styles.navText}>Settings</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      {/* Bottom Text */}
+      <Text style={styles.bottomText}>Prototype #2</Text>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#6C48C5",
-    paddingHorizontal: 16,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    backgroundColor: "#6C48C5", // Deep purple background
     alignItems: "center",
-    marginTop: 16,
-  },
-  employeeViewButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  employeeViewText: {
-    fontSize: 14,
-    color: "#6C48C5",
-  },
-  helpButton: {
-    padding: 8,
+    paddingHorizontal: 16,
   },
   title: {
-    fontSize: 28,
+    fontSize: 36,
     fontWeight: "bold",
     color: "#FFFFFF",
+    marginTop: 40, // Space between the top of the screen and title
+    marginBottom: 20, // Space between title and image
     textAlign: "center",
-    marginVertical: 16,
   },
-  searchBar: {
-    flexDirection: "row",
+  imageContainer: {
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 50,
-    marginBottom: 100,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    marginBottom: 20, // Space between image and buttons
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
+  imageStyle: {
+    height: 150,
+    width: 150,
+    resizeMode: "contain", // Ensure the image retains its aspect ratio
   },
-  buttonGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 30,
+  buttonsContainer: {
+    width: "100%",
+    alignItems: "center",
+    paddingBottom: 80, // Add bottom padding to ensure space for the bottom text
   },
   button: {
-    width: "48%",
-    backgroundColor: "#FFFFFF",
+    width: "80%",
     paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: "#FFF7F7",
+    borderRadius: 20,
     alignItems: "center",
-    marginBottom: 16,
+    marginVertical: 12, // Space between buttons
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonText: {
-    marginTop: 8,
-    fontSize: 14,
+    fontSize: 18,
     color: "#6C48C5",
+    fontWeight: "600",
+  },
+  bottomText: {
+    position: "absolute",
+    bottom: 20, // Ensure it stays at the very bottom of the screen
     textAlign: "center",
-  },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#ccc",
-    paddingTop: 8,
-    paddingBottom: 16,
-    backgroundColor: "#4B2E83",
-    borderRadius: 20,
-    marginTop: 150,
-  },
-  navButton: {
-    alignItems: "center",
-  },
-  navText: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#FFFFFF",
-    marginTop: 4,
+    fontWeight: "bold",
   },
 });
 
-export default InventoryEditor;
+export default HomeScreen;
