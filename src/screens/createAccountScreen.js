@@ -2,77 +2,80 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 // import * as SQLite from 'expo-sqlite';
+import * as SQLite from 'expo-sqlite';
 
-// const db = SQLite.openDatabase("MainDB.db");
+
+const db = SQLite.openDatabase("MainDB.db");
 
 const CreateAccountScreen = ({ navigation }) => {
   const [userName, setUser] = useState(" ");
   const [password, setPassword] = useState(" ");
   const [email, setEmail] = useState(" ");
 
-  // useEffect(() => {
-  //   createTable();
-  //   checkExistingData();
-  // }, []);
+  useEffect(() => {
+    createTable();
+    checkExistingData();
+  }, []);
 
   // Create the Users table
-  // const createTable = () => {
-  //   db.transaction((tx) => {
-  //     tx.executeSql(
-  //       `CREATE TABLE IF NOT EXISTS Users (
-  //         id INTEGER PRIMARY KEY AUTOINCREMENT,
-  //         Username TEXT NOT NULL,
-  //         Password TEXT NOT NULL,
-  //         Email TEXT UNIQUE NOT NULL
-  //       );`,
-  //       [],
-  //       () => console.log("Users table created successfully"),
-  //       (tx, error) => console.error("Error creating table:", error)
-  //     );
-  //   });
-  // };
+  const createTable = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          Username TEXT NOT NULL,
+          Password TEXT NOT NULL,
+          Email TEXT UNIQUE NOT NULL
+        );`,
+        [],
+        () => console.log("Users table created successfully"),
+        (tx, error) => console.error("Error creating table:", error)
+      );
+    });
+  };
 
-  // // Check if user data exists
-  // const checkExistingData = () => {
-  //   db.transaction((tx) => {
-  //     tx.executeSql(
-  //       "SELECT * FROM Users",
-  //       [],
-  //       (tx, results) => {
-  //         if (results.rows.length > 0) {
-  //           navigation.navigate("StartScreen"); // Navigate if data exists
-  //         }
-  //       },
-  //       (tx, error) => console.error("Error checking data:", error)
-  //     );
-  //   });
-  // };
+  console.log("Transaction function:", db.transaction);
+  // Check if user data exists
+  const checkExistingData = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM Users",
+        [],
+        (tx, results) => {
+          if (results.rows.length > 0) {
+            navigation.navigate("StartScreen"); // Navigate if data exists
+          }
+        },
+        (tx, error) => console.error("Error checking data:", error)
+      );
+    });
+  };
 
-  // // Insert user data into the table
-  // const handleCreateAccount = () => {
-  //   if (userName.trim() === "" || password.trim() === "" || email.trim() === "") {
-  //     Alert.alert("Warning!", "All fields are required.");
-  //     return;
-  //   }
+  // Insert user data into the table
+  const handleCreateAccount = () => {
+    if (userName.trim() === "" || password.trim() === "" || email.trim() === "") {
+      Alert.alert("Warning!", "All fields are required.");
+      return;
+    }
 
-  //   db.transaction((tx) => {
-  //     tx.executeSql(
-  //       "INSERT INTO Users (Username, Password, Email) VALUES (?, ?, ?);",
-  //       [userName, password, email],
-  //       () => {
-  //         Alert.alert("Success", "Account created successfully!");
-  //         navigation.navigate("StartScreen");
-  //       },
-  //       (tx, error) => {
-  //         if (error.message.includes("UNIQUE constraint failed")) {
-  //           Alert.alert("Error", "Email already exists!");
-  //         } else {
-  //           console.error("Error inserting data:", error);
-  //         }
-  //       }
-  //     );
-  //   });
-  // };
+    db.transaction((tx) => {
+      tx.executeSql(
+        "INSERT INTO Users (Username, Password, Email) VALUES (?, ?, ?);",
+        [userName, password, email],
+        () => {
+          Alert.alert("Success", "Account created successfully!");
+          navigation.navigate("StartScreen");
+        },
+        (tx, error) => {
+          if (error.message.includes("UNIQUE constraint failed")) {
+            Alert.alert("Error", "Email already exists!");
+          } else {
+            console.error("Error inserting data:", error);
+          }
+        }
+      );
+    });
+  };
 
   return (
     <View style={styles.container}>
