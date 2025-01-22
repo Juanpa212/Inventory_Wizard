@@ -47,7 +47,7 @@ const HomeScreen = ({ navigation }) => {
         style={styles.button}
         onPress={() => navigation.navigate("pass")}
       >
-        <Text style={styles.buttonText}>Go to Forgot Passoword Screen</Text>
+        <Text style={styles.buttonText}>Go to Forgot Password Screen</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -55,6 +55,13 @@ const HomeScreen = ({ navigation }) => {
         onPress={() => navigation.navigate("invManager")}
       >
         <Text style={styles.buttonText}>Go to Invoice Manager Screen</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("Help")}
+      >
+        <Text style={styles.buttonText}>Go to Help Center</Text>
       </TouchableOpacity>
       {/* Bottom Text */}
       <Text style={styles.bottomText}>Prototype #2</Text>

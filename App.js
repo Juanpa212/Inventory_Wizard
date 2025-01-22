@@ -8,6 +8,7 @@ import AddItemScreen from "./src/screens/addItemsScreen";
 import forgottenPasswordScreen from "./src/screens/forgottenPasswordScreen";
 import createAccountScreen from "./src/screens/createAccountScreen";
 import InvoiceManager from "./src/screens/invoiceManager";
+import HelpCenter from "./src/screens/HelpCenter";
 
 
 
@@ -21,6 +22,7 @@ const navigator = createStackNavigator(
     create : createAccountScreen,
     pass : forgottenPasswordScreen,
     invManager : InvoiceManager,
+    Help : HelpCenter,
   },
   {
     initialRouteName: "home",
