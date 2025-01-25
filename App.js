@@ -9,6 +9,7 @@ import forgottenPasswordScreen from "./src/screens/forgottenPasswordScreen";
 import createAccountScreen from "./src/screens/createAccountScreen";
 import InvoiceManager from "./src/screens/invoiceManager";
 import { SQLiteProvider } from "expo-sqlite";
+import HelpCenter from "./src/screens/HelpCenter";
 
 async function migrateDbIfNeeded(db) {
   const DATABASE_VERSION = 1;
@@ -45,6 +46,7 @@ const navigator = createStackNavigator(
     create: createAccountScreen,
     pass: forgottenPasswordScreen,
     invManager: InvoiceManager,
+    help : HelpCenter,
   },
   {
     initialRouteName: "home",
