@@ -12,7 +12,15 @@ import { Dropdown } from "react-native-element-dropdown";
 import { FontAwesome } from "@expo/vector-icons";
 import * as SQLite from 'expo-sqlite';
 
-const AddItemScreen = ({ route, navigation }) => {
+import { useNavigation, useRoute } from '@react-navigation/native'; //navigation hooks
+
+const addItemScreen = () => {
+// const addItemScreen = ({ navigation }) => {
+
+  // use of hooks inside the component
+  const navigation = useNavigation();
+  const route = useRoute();
+
   // Form state
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -23,51 +31,9 @@ const AddItemScreen = ({ route, navigation }) => {
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [db, setDb] = useState(null);
+  const [inventoryId, setInventoryId] = useState(1);
 
-  // Get inventory_id from navigation if passed
-  const inventory_id = route.params?.inventory_id;
-
-  useEffect(() => {
-    initDatabase();
-  }, []);
-
-  const initDatabase = async () => {
-    try {
-      const database = await SQLite.openDatabaseAsync('MainDB.db');
-      setDb(database);
-      await createItemsTable(database);
-    } catch (error) {
-      console.error("Error opening database:", error);
-      Alert.alert("Error", "Unable to access database. Please try again later.");
-    }
-  };
-
-  const createItemsTable = async (database) => {
-    try {
-      await database.execAsync(`
-        CREATE TABLE IF NOT EXISTS items (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          inventory_id INTEGER NOT NULL,
-          name TEXT NOT NULL,
-          quantity INTEGER NOT NULL CHECK (quantity >= 0),
-          category TEXT,
-          brand TEXT,
-          price REAL CHECK (price >= 0),
-          priority TEXT CHECK (priority IN ('Low', 'Medium', 'High')),
-          description TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
-          minimum_stock INTEGER DEFAULT 0,
-          unit TEXT DEFAULT 'pieces',
-          FOREIGN KEY (inventory_id) REFERENCES inventory (id)
-        )
-      `);
-    } catch (error) {
-      console.error("Error creating items table:", error);
-      Alert.alert("Error", "Failed to initialize database. Please restart the app.");
-    }
-  };
-
+  // Dropdown data
   const categoryData = [
     { label: "Stickers", value: "Stickers" },
     { label: "Books", value: "Books" },
@@ -86,65 +52,78 @@ const AddItemScreen = ({ route, navigation }) => {
     { label: "CyberGoth", value: "CyberGoth" },
   ];
 
-  const validateInputs = () => {
-    if (!name.trim()) {
-      Alert.alert("Error", "Item name is required");
-      return false;
+  // getting the inventory
+  useEffect(() => {
+    if (route.params?.inventory_id) {
+      setInventoryId(route.params.inventory_id);
     }
-    if (!quantity.trim() || isNaN(quantity) || parseInt(quantity) < 0) {
-      Alert.alert("Error", "Please enter a valid quantity");
-      return false;
+  }, [route.params]);
+
+  useEffect(() => {
+    const setupDatabase = async () => {
+      try {
+        const database = await SQLite.openDatabaseAsync('MainDB.db');
+        setDb(database);
+
+        await database.execAsync(`
+          CREATE TABLE IF NOT EXISTS items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            inventory_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            quantity INTEGER NOT NULL,
+            category TEXT,
+            brand TEXT,
+            price REAL,
+            priority TEXT,
+            description TEXT
+          )
+        `);
+
+        console.log("Database and table setup complete");
+      } catch (error) {
+        console.error("Database setup error:", error);
+        Alert.alert(
+          "Database Error",
+          "There was an error setting up the database. Please restart the app."
+        );
+      }
+    };
+
+    setupDatabase();
+
+    // Get inventory ID from navigation if available
+    const currentRoute = navigation.getState().routes.find(route => route.name === 'add');
+    if (currentRoute?.params?.inventory_id) {
+      setInventoryId(currentRoute.params.inventory_id);
     }
-    if (!price.trim() || isNaN(price) || parseFloat(price) < 0) {
-      Alert.alert("Error", "Please enter a valid price");
-      return false;
-    }
-    if (!category) {
-      Alert.alert("Error", "Please select a category");
-      return false;
-    }
-    if (!priority) {
-      Alert.alert("Error", "Please select a priority level");
-      return false;
-    }
-    if (!brand) {
-      Alert.alert("Error", "Please select a brand");
-      return false;
-    }
-    return true;
-  };
+  }, []);
 
   const handleAddItem = async () => {
     if (isLoading || !db) return;
-    if (!validateInputs()) return;
+
+    // Validate inputs
+    if (!name.trim() || !quantity.trim() || !price.trim()) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
+    }
 
     setIsLoading(true);
 
     try {
-      const query = `
-        INSERT INTO items (
-          inventory_id, name, quantity, category, 
-          brand, price, priority, description
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      const insertQuery = `
+        INSERT INTO items (inventory_id, name, quantity, category, brand, price, priority, description)
+        VALUES ("${inventoryId}", "${name.trim()}", "${quantity}", "${category}", "${brand}", "${price}", "${priority}", "${description}")
       `;
 
-      await db.execAsync(query, [
-        inventory_id,
-        name.trim(),
-        parseInt(quantity),
-        category,
-        brand,
-        parseFloat(price),
-        priority,
-        description.trim()
-      ]);
-
+      console.log("Executing query:", insertQuery);
+      await db.execAsync(insertQuery);
+      
       Alert.alert(
         "Success",
         "Item added successfully!",
         [
           {
-            text: "Add Another",
+            text: "Add Another", 
             onPress: () => {
               setName("");
               setQuantity("");
@@ -157,13 +136,16 @@ const AddItemScreen = ({ route, navigation }) => {
           },
           {
             text: "View Inventory",
-            onPress: () => navigation.navigate("ViewInventory")
+            onPress: () => navigation.navigate("#")  // must change to navigation to view inventory page
           }
         ]
       );
     } catch (error) {
       console.error("Error adding item:", error);
-      Alert.alert("Error", "Failed to add item. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to add item. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -223,7 +205,7 @@ const AddItemScreen = ({ route, navigation }) => {
             valueField="value"
             placeholder="Select category"
             value={category}
-            onChange={(item) => setCategory(item.value)}
+            onChange={item => setCategory(item.value)}
           />
 
           <Text style={styles.label}>
@@ -236,7 +218,7 @@ const AddItemScreen = ({ route, navigation }) => {
             valueField="value"
             placeholder="Select priority"
             value={priority}
-            onChange={(item) => setPriority(item.value)}
+            onChange={item => setPriority(item.value)}
           />
 
           <Text style={styles.label}>
@@ -249,7 +231,7 @@ const AddItemScreen = ({ route, navigation }) => {
             valueField="value"
             placeholder="Select brand"
             value={brand}
-            onChange={(item) => setBrand(item.value)}
+            onChange={item => setBrand(item.value)}
           />
 
           <Text style={styles.label}>Description</Text>
@@ -363,4 +345,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddItemScreen;
+export default addItemScreen;

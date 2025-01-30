@@ -92,13 +92,13 @@ const CreateInventoryScreen = ({ navigation }) => {
         [
           {
             text: "Add Items",
-            onPress: () => navigation.navigate("AddItems", { 
+            onPress: () => navigation.navigate("addItemsScreen", { // changed add items
               inventoryName: inventoryName.trim() 
             })
           },
           {
             text: "View Inventories",
-            onPress: () => navigation.navigate("ViewInventories")
+            onPress: () => navigation.navigate("#")
           }
         ]
       );
@@ -174,7 +174,7 @@ const CreateInventoryScreen = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.viewButton}
-          onPress={() => navigation.navigate("ViewInventories")}
+          onPress={() => navigation.navigate("#")}
           disabled={isLoading}
         >
           <Text style={styles.viewButtonText}>View All Inventories</Text>
