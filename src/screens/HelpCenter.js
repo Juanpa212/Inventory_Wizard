@@ -16,26 +16,26 @@ const FAQItem = ({ question, answer }) => {
   };
 
   return (
-    <View style={styles.faqItem}>
-      <TouchableOpacity
-        style={styles.questionContainer}
-        onPress={toggleExpand}
-        activeOpacity={0.7}
-      >
+    <TouchableOpacity 
+      style={styles.faqItem}
+      onPress={toggleExpand}
+      activeOpacity={0.7}
+    >
+      <View style={styles.questionContainer}>
         <Text style={styles.questionText}>{question}</Text>
         <Ionicons
           name={expanded ? 'chevron-up' : 'chevron-down'}
           size={24}
-          color="#666"
+          color="#FFFFFF"
         />
-      </TouchableOpacity>
+      </View>
       {expanded && (
         <View style={styles.answerContainer}>
           <Text style={styles.answerText}>{answer}</Text>
         </View>
       )}
       <View style={styles.separator} />
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -65,8 +65,8 @@ const HelpCenter = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Help Center</Text>
-      <Text style={styles.subHeader}>
+      <Text style={styles.title}>Help Center</Text>
+      <Text style={styles.subTitle}>
         Find answers to commonly asked questions about Inventory Wizard
       </Text>
       <ScrollView style={styles.scrollView}>
@@ -85,51 +85,69 @@ const HelpCenter = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#6C48C5',
     paddingTop: 40,
   },
-  header: {
-    fontSize: 24,
+  title: {
+    fontSize: 36,
     fontWeight: 'bold',
-    padding: 16,
-    color: '#333',
-  },
-  subHeader: {
-    fontSize: 16,
-    color: '#666',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    textAlign: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 16,
+  },
+  subTitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 24,
   },
   scrollView: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   faqItem: {
-    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 20,
+    marginBottom: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   questionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
   },
   questionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
     flex: 1,
     paddingRight: 16,
   },
   answerContainer: {
-    paddingBottom: 16,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
   },
   answerText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    fontSize: 16,
+    color: '#FFFFFF',
+    opacity: 0.95,
+    lineHeight: 24,
+    letterSpacing: 0.3,
   },
   separator: {
     height: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginTop: 8,
   },
 });
 

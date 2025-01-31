@@ -9,6 +9,7 @@ import forgottenPasswordScreen from "./src/screens/forgottenPasswordScreen";
 import createAccountScreen from "./src/screens/createAccountScreen";
 import InvoiceManager from "./src/screens/invoiceManager";
 import HelpCenter from "./src/screens/HelpCenter";
+import stockLevels from "./src/screens/stockLevels";
 
 
 
@@ -23,6 +24,7 @@ const navigator = createStackNavigator(
     pass : forgottenPasswordScreen,
     invManager : InvoiceManager,
     Help : HelpCenter,
+    stock : stockLevels,
   },
   {
     initialRouteName: "home",
