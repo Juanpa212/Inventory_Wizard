@@ -38,21 +38,28 @@ const CreateInventoryScreen = ({ navigation }) => {
 
   const createTables = async (database) => {
     try {
-      // Create Inventory table
-      await database.execAsync(`
+      // Drop existing table to ensure clean slate
+      await database.execAsync('DROP TABLE IF EXISTS Inventory');
+      
+      // Create new table with simple structure
+      const createTableQuery = `
         CREATE TABLE IF NOT EXISTS Inventory (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
           description TEXT,
-          location TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          user_id INTEGER,
-          FOREIGN KEY(user_id) REFERENCES Users(id)
+          location TEXT
         )
-      `);
-      console.log("Inventory table created successfully");
+      `;
+      
+      await database.execAsync(createTableQuery);
+      console.log("Table created successfully");
+      
+      // Verify table structure
+      const tableInfo = await database.execAsync("PRAGMA table_info(Inventory)");
+      console.log("Table structure:", tableInfo);
+      
     } catch (error) {
-      console.error("Error creating table:", error);
+      console.error("Error in createTables:", error);
       Alert.alert(
         "Database Error",
         "There was an error initializing the app. Please restart the app."
@@ -70,46 +77,67 @@ const CreateInventoryScreen = ({ navigation }) => {
 
   const handleCreateInventory = async () => {
     if (isLoading || !db) return;
-    if (!validateInputs()) return;
-
+  
+    const trimmedName = inventoryName.trim();
+    const trimmedDescription = description.trim();
+    const trimmedLocation = location.trim();
+  
+    if (!trimmedName) {
+      Alert.alert("Error", "Inventory name is required");
+      return;
+    }
+  
     setIsLoading(true);
-
+  
     try {
+      // First verify the table exists
+      const tableCheck = await db.execAsync(`
+        SELECT name FROM sqlite_master WHERE type='table' AND name='Inventory'
+      `);
+      console.log("Table check result:", tableCheck);
+  
+      // Simplify the insert statement
       const query = `
-        INSERT INTO Inventory (name, description, location)
-        VALUES (?, ?, ?)
+        INSERT INTO Inventory (name, description, location) 
+        VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
       `;
-      
-      await db.execAsync(query, [
-        inventoryName.trim(),
-        description.trim(),
-        location.trim()
-      ]);
-
+      console.log("Executing query:", query);
+  
+      const result = await db.execAsync(query);
+      console.log("Insert result:", result);
+  
       Alert.alert(
         "Success",
         "Inventory created successfully!",
         [
           {
             text: "Add Items",
-            onPress: () => navigation.navigate("addItemsScreen", { // changed add items
-              inventoryName: inventoryName.trim() 
+            onPress: () => navigation.navigate("add", { 
+              inventoryName: trimmedName 
             })
           },
           {
             text: "View Inventories",
-            onPress: () => navigation.navigate("#")
+            onPress: () => navigation.navigate("invViewer")
           }
         ]
       );
-
-      // Clear form
+  
       setInventoryName("");
       setDescription("");
       setLocation("");
-
+  
     } catch (error) {
       console.error("Error creating inventory:", error);
+      
+      // Try to get more information about the table structure
+      try {
+        const tableInfo = await db.execAsync("PRAGMA table_info(Inventory)");
+        console.log("Table structure:", tableInfo);
+      } catch (e) {
+        console.error("Could not get table info:", e);
+      }
+  
       Alert.alert(
         "Error",
         "There was an error creating the inventory. Please try again."
@@ -118,6 +146,7 @@ const CreateInventoryScreen = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -174,7 +203,7 @@ const CreateInventoryScreen = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.viewButton}
-          onPress={() => navigation.navigate("#")}
+          onPress={() => navigation.navigate("invViewer")}
           disabled={isLoading}
         >
           <Text style={styles.viewButtonText}>View All Inventories</Text>
