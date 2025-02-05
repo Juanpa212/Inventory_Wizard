@@ -78,13 +78,15 @@ import GeneralStart from "./src/screens/generalStartScreen";
 import AddItemScreen from "./src/screens/addItemsScreen";
 import ForgottenPasswordScreen from "./src/screens/forgottenPasswordScreen";
 import CreateAccountScreen from "./src/screens/createAccountScreen";
-import InvoiceManager from "./src/screens/invoiceManager";
+import InvoiceCreator from "./src/screens/invoiceCreator";
+import InvoiceManager from './src/screens/invoiceManager';
 import { SQLiteProvider } from "expo-sqlite";
 import HelpCenter from "./src/screens/HelpCenter";
 import CreateInventoryScreen from "./src/screens/inventoryScreen";
 import stockLevels from "./src/screens/stockLevels";
 import InventoryViewer from './src/screens/InventoryViewer';
 import teamViewer from './src/screens/teamViewer';
+
 
 
 const Stack = createStackNavigator();
@@ -131,11 +133,13 @@ function App() {
           <Stack.Screen name="start_1" component={GeneralStart} />
           <Stack.Screen name="add" component={AddItemScreen} />
           <Stack.Screen name="create" component={CreateAccountScreen} />
-          <Stack.Screen name="pass" component={ForgottenPasswordScreen} />
-          <Stack.Screen name="invManager" component={InvoiceManager} />
+          <Stack.Screen name="forgotPassword" component={ForgottenPasswordScreen} />
+          <Stack.Screen name="invoiceManager" component={InvoiceManager} />
           <Stack.Screen name="help" component={HelpCenter} />
           <Stack.Screen name="inventory" component={CreateInventoryScreen} />
-          <Stack.Screen name="stock" component={stockLevels} />
+          <Stack.Screen name="stock" component={StockLevels} />
+          <Stack.Screen name="inventoryManager" component={InventoryManager} />
+          <Stack.Screen name="createInvoice" component={InvoiceCreator} />
           <Stack.Screen name="invViewer" component={InventoryViewer} />
           <Stack.Screen name="teamViewer" component={teamViewer} />
 
