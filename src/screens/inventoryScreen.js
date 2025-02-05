@@ -8,10 +8,13 @@ import {
   Alert,
   ScrollView 
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+// import { FontAwesome } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
 
 const CreateInventoryScreen = ({ navigation }) => {
+
+  // const invExampel = {id: 1, name:"carl", description:"a guy", location:"his house"};
+
   const [inventoryName, setInventoryName] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -38,21 +41,30 @@ const CreateInventoryScreen = ({ navigation }) => {
 
   const createTables = async (database) => {
     try {
-      // Create Inventory table
-      await database.execAsync(`
+      const createTableQuery = `
         CREATE TABLE IF NOT EXISTS Inventory (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          description TEXT,
-          location TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          user_id INTEGER,
-          FOREIGN KEY(user_id) REFERENCES Users(id)
+          name TEXT NOT NULL DEFAULT '',
+          description TEXT DEFAULT '',
+          location TEXT DEFAULT ''
         )
+      `;
+      
+      await database.execAsync(createTableQuery);
+      console.log("Table creation completed");
+      
+      // Verify the table structure
+      const tableInfo = await database.execAsync("PRAGMA table_info(Inventory)");
+      console.log("Current table structure:", tableInfo);
+      
+      // Verify the table exists
+      const tableExists = await database.execAsync(`
+        SELECT name FROM sqlite_master WHERE type='table' AND name='Inventory'
       `);
-      console.log("Inventory table created successfully");
+      console.log("Table exists check:", tableExists);
+      
     } catch (error) {
-      console.error("Error creating table:", error);
+      console.error("Error in createTables:", error);
       Alert.alert(
         "Database Error",
         "There was an error initializing the app. Please restart the app."
@@ -60,64 +72,81 @@ const CreateInventoryScreen = ({ navigation }) => {
     }
   };
 
-  const validateInputs = () => {
-    if (!inventoryName.trim()) {
-      Alert.alert("Error", "Inventory name is required");
-      return false;
-    }
-    return true;
-  };
+  // const validateInputs = () => {
+  //   if (!inventoryName.trim()) {
+  //     Alert.alert("Error", "Inventory name is required");
+  //     return false;
+  //   }
+  //   return true;
+  // };
 
   const handleCreateInventory = async () => {
     if (isLoading || !db) return;
-    if (!validateInputs()) return;
-
+  
+    const trimmedName = inventoryName.trim();
+    const trimmedDescription = description.trim();
+    const trimmedLocation = location.trim();
+  
+    if (!trimmedName) {
+      Alert.alert("Error", "Inventory name is required");
+      return;
+    }
+  
     setIsLoading(true);
-
+  
     try {
+      // First verify table structure
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS Inventory (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          location TEXT
+        )
+      `);
+  
+      // Direct insert without parameters
       const query = `
-        INSERT INTO Inventory (name, description, location)
-        VALUES (?, ?, ?)
+        INSERT INTO Inventory (name, description, location) 
+        VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
       `;
       
-      await db.execAsync(query, [
-        inventoryName.trim(),
-        description.trim(),
-        location.trim()
-      ]);
-
-      Alert.alert(
-        "Success",
-        "Inventory created successfully!",
-        [
-          {
-            text: "Add Items",
-            onPress: () => navigation.navigate("addItemsScreen", { // changed add items
-              inventoryName: inventoryName.trim() 
-            })
-          },
-          {
-            text: "View Inventories",
-            onPress: () => navigation.navigate("#")
-          }
-        ]
-      );
-
-      // Clear form
+      await db.execAsync(query);
+      
+      // Verify the insert
+      const check = await db.execAsync('SELECT * FROM Inventory');
+      console.log("Insert verification:", check);
+  
+      Alert.alert("Success", "Inventory created successfully!");
+      navigation.navigate("invViewer");
+  
       setInventoryName("");
       setDescription("");
       setLocation("");
-
+  
     } catch (error) {
-      console.error("Error creating inventory:", error);
-      Alert.alert(
-        "Error",
-        "There was an error creating the inventory. Please try again."
-      );
+      console.error("Insert error:", error);
+      Alert.alert("Error", "Failed to create inventory");
     } finally {
       setIsLoading(false);
     }
+
+    try {
+      // Test insert
+      await db.execAsync(`
+        INSERT INTO Inventory (name, description, location)
+        VALUES ('Test1', 'Test Desc', 'Test Loc')
+      `);
+      
+      // Verify insert
+      const result = await db.execAsync('SELECT * FROM Inventory');
+      console.log("Create Screen - Data:", result);
+    } catch (error) {
+      console.error("Insert error:", error);
+    }
+ 
   };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -127,7 +156,7 @@ const CreateInventoryScreen = ({ navigation }) => {
 
       <View style={styles.formContainer}>
         <View style={styles.iconContainer}>
-          <FontAwesome name="warehouse" size={50} color="#6C48C5" />
+          {/* <FontAwesome name="warehouse" size={50} color="#6C48C5" /> */}
         </View>
 
         <Text style={styles.label}>Inventory Name*</Text>
@@ -174,7 +203,7 @@ const CreateInventoryScreen = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.viewButton}
-          onPress={() => navigation.navigate("#")}
+          onPress={() => navigation.navigate("invViewer")}
           disabled={isLoading}
         >
           <Text style={styles.viewButtonText}>View All Inventories</Text>

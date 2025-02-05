@@ -83,8 +83,10 @@ import InvoiceManager from './src/screens/invoiceManager';
 import { SQLiteProvider } from "expo-sqlite";
 import HelpCenter from "./src/screens/HelpCenter";
 import CreateInventoryScreen from "./src/screens/inventoryScreen";
-import StockLevels from "./src/screens/stockLevels";
-import InventoryManager from './src/screens/inventoryManager';
+import stockLevels from "./src/screens/stockLevels";
+import InventoryViewer from './src/screens/InventoryViewer';
+import teamViewer from './src/screens/teamViewer';
+
 
 
 const Stack = createStackNavigator();
@@ -138,6 +140,8 @@ function App() {
           <Stack.Screen name="stock" component={StockLevels} />
           <Stack.Screen name="inventoryManager" component={InventoryManager} />
           <Stack.Screen name="createInvoice" component={InvoiceCreator} />
+          <Stack.Screen name="invViewer" component={InventoryViewer} />
+          <Stack.Screen name="teamViewer" component={teamViewer} />
 
         </Stack.Navigator>
       </NavigationContainer>

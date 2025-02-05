@@ -136,7 +136,7 @@ const addItemScreen = () => {
           },
           {
             text: "View Inventory",
-            onPress: () => navigation.navigate("#")  // must change to navigation to view inventory page
+            onPress: () => navigation.navigate("invViewer")  // must change to navigation to view inventory page
           }
         ]
       );

@@ -6,15 +6,20 @@ const HomeScreen = ({ navigation }) => {
   const navigationData = [
     { id: "1", title: "Go to Login Screen", screen: "login" },
     { id: "2", title: "Go to Create Account Screen", screen: "create" },
-    { id: "3", title: "Go to Navigation Screen", screen: "Navigation" },
+    { id: "6", title: "Go to Forgot Password Screen", screen: "forgotPassword" },
+    { id: "3", title: "Go to Inventory Editor Screen", screen: "editor" },
+    { id: "9", title: "Go to Create Inventory Screen", screen: "inventory"},
     { id: "4", title: "Go to Start Screen", screen: "start_1" },
     { id: "5", title: "Go to Add Items Screen", screen: "add" },
-    { id: "6", title: "Go to Forgot Password Screen", screen: "pass" },
     { id: "7", title: "Go to Invoice Manager Screen", screen: "invoiceManager" },
     { id: "8", title: "Go to Help Center Screen", screen: "help"},
-    { id: "9", title: "Go to create Inventory Screen", screen: "inventory"},
     { id: "10", title: "Go to Stock Levels Screen", screen: "stock"},
-    { id: "11", title: "Go to Create Invoice Screen", screen: "createInvoice"},
+    { id: "11", title: "Go to Inventoy Viewer Screen", screen: "invViewer"},
+    { id: "12", title: "Go to Team Viewer Screen", screen: "teamViewer"},
+    { id: "13", title: "Go to Create Invoice Screen", screen: "createInvoice"},
+    { id: "14", title: "Go to Inventoy Manager Screen", screen: "inventoryManager"},
+    { id: "15", title: "Go to Invoice Manager Screen", screen: "invoiceManager"},
+
 
 
   ];

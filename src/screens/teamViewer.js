@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, StyleSheet, View, TouchableOpacity, Image } from "react-native";
 
-const invEditor = () => {
+const teamViewer = () => {
   return (
     <View>
       <Text>My Name is carl</Text>
@@ -13,4 +13,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default invEditor;
+export default teamViewer;
