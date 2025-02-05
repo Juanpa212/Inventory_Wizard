@@ -75,35 +75,35 @@ const InventoryViewer = ({ navigation }) => {
   };
   
 
-  const fetchInventories = async (database) => {
-    try {
-      // Test select
-      const result = await database.execAsync('SELECT * FROM Inventory');
-      console.log("Viewer - Data:", result);
+  // const fetchInventories = async (database) => {
+  //   try {
+  //     // Test select
+  //     const result = await database.execAsync('SELECT * FROM Inventory');
+  //     console.log("Viewer - Data:", result);
       
-      if (result?.[0]?.rows) {
-        setInventories(result[0].rows);
-      }
-    } catch (error) {
-      console.error("Fetch error:", error);
-    }
-  };
+  //     if (result?.[0]?.rows) {
+  //       setInventories(result[0].rows);
+  //     }
+  //   } catch (error) {
+  //     console.error("Fetch error:", error);
+  //   }
+  // };
 
 
-  const fetchItems = async (inventoryId) => {
-    try {
-      const query = `
-        SELECT * FROM items 
-        WHERE inventory_id = ? AND name LIKE '%${searchQuery}%'
-        ORDER BY ${sortBy} ${sortOrder}
-      `;
-      const result = await db.execAsync(query, [inventoryId]);
-      setItems(result || []);
-    } catch (error) {
-      console.error("Error fetching items:", error);
-      Alert.alert("Error", "Failed to load inventory items.");
-    }
-  };
+  // const fetchItems = async (inventoryId) => {
+  //   try {
+  //     const query = `
+  //       SELECT * FROM items 
+  //       WHERE inventory_id = ? AND name LIKE '%${searchQuery}%'
+  //       ORDER BY ${sortBy} ${sortOrder}
+  //     `;
+  //     const result = await db.execAsync(query, [inventoryId]);
+  //     setItems(result || []);
+  //   } catch (error) {
+  //     console.error("Error fetching items:", error);
+  //     Alert.alert("Error", "Failed to load inventory items.");
+  //   }
+  // };
 
 
   const selectInventory = async (inventory) => {
@@ -126,68 +126,68 @@ const InventoryViewer = ({ navigation }) => {
 
   // HARD CODED BACKUP
 
-  // const fetchInventories = async (database) => {
-  //   try {
-  //     const inventories = [
-  //       { id: 1, name: "Compu Solutions", description: "A local IT shop", location: "Market Plaza" },
-  //       { id: 2, name: "Fresh Sweets", description: "A family bakery", location: "Carolina" },
-  //       { id: 3, name: "Stark labs", description: "A Genius. Billionaire. Philanthropist. Laboratory", location: "his house" }
-  //     ];
-  //     setInventories(inventories);
+  const fetchInventories = async (database) => {
+    try {
+      const inventories = [
+        { id: 1, name: "Compu Solutions", description: "A local IT shop", location: "Market Plaza" },
+        { id: 2, name: "Fresh Sweets", description: "A family bakery", location: "Carolina" },
+        { id: 3, name: "Stark labs", description: "A Genius. Billionaire. Philanthropist. Laboratory", location: "his house" }
+      ];
+      setInventories(inventories);
       
-  //     // Log the state after setting
-  //     console.log("Set inventories to:", inventories);
-  //   } catch (error) {
-  //     console.error("Fetch error:", error);
-  //   }
-  // };
+      // Log the state after setting
+      console.log("Set inventories to:", inventories);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
 
-  // const fetchItems = async (inventoryId) => {
-  //   try {
-  //     // Hardcoded items based on inventory ID
-  //     let inventoryItems = [];
+  const fetchItems = async (inventoryId) => {
+    try {
+      // Hardcoded items based on inventory ID
+      let inventoryItems = [];
   
-  //     if (inventoryId === 1) {
-  //       inventoryItems = [
-  //         { id: 1, name: 'Desktop PC', quantity: 15, price: 899.99, category: 'Computers' },
-  //         { id: 2, name: 'Gaming Laptop', quantity: 8, price: 1299.99, category: 'Computers' },
-  //         { id: 3, name: 'Mechanical Keyboard', quantity: 25, price: 89.99, category: 'Peripherals' },
-  //         { id: 4, name: 'Wireless Mouse', quantity: 40, price: 29.99, category: 'Peripherals' },
-  //         { id: 5, name: 'Monitor 27"', quantity: 12, price: 299.99, category: 'Displays' },
-  //         { id: 6, name: 'External SSD 1TB', quantity: 30, price: 129.99, category: 'Storage' }
-  //       ];
-  //     } else if (inventoryId === 2) {
-  //       inventoryItems = [
-  //         { id: 7, name: 'Chocolate Cake', quantity: 8, price: 32.99, category: 'Cakes' },
-  //         { id: 8, name: 'Vanilla Cupcakes', quantity: 48, price: 3.99, category: 'Cupcakes' },
-  //         { id: 9, name: 'Apple Pie', quantity: 6, price: 24.99, category: 'Pies' },
-  //         { id: 10, name: 'Cookie Box', quantity: 20, price: 15.99, category: 'Cookies' },
-  //         { id: 11, name: 'Cheesecake', quantity: 5, price: 28.99, category: 'Cakes' },
-  //         { id: 12, name: 'Birthday Cake', quantity: 3, price: 45.99, category: 'Custom Orders' }
-  //       ];
-  //     } else if (inventoryId === 3) {
-  //       inventoryItems = [
-  //         { id: 13, name: 'Arc Reactor', quantity: 1, price: 999999.99, category: 'Power Sources' },
-  //         { id: 14, name: 'Iron Man Suit Mk3', quantity: 1, price: 1999999.99, category: 'Defense Systems' },
-  //         { id: 15, name: 'Repulsor Gloves', quantity: 5, price: 49999.99, category: 'Weapons' },
-  //         { id: 16, name: 'AI Assistant Core', quantity: 3, price: 299999.99, category: 'Software' },
-  //         { id: 17, name: 'Nanotech Container', quantity: 2, price: 499999.99, category: 'Materials' },
-  //         { id: 18, name: 'Quantum Tunnel', quantity: 1, price: 2999999.99, category: 'Research Equipment' }
-  //       ];
-  //     }
+      if (inventoryId === 1) {
+        inventoryItems = [
+          { id: 1, name: 'Desktop PC', quantity: 15, price: 899.99, category: 'Computers' },
+          { id: 2, name: 'Gaming Laptop', quantity: 8, price: 1299.99, category: 'Computers' },
+          { id: 3, name: 'Mechanical Keyboard', quantity: 25, price: 89.99, category: 'Peripherals' },
+          { id: 4, name: 'Wireless Mouse', quantity: 40, price: 29.99, category: 'Peripherals' },
+          { id: 5, name: 'Monitor 27"', quantity: 12, price: 299.99, category: 'Displays' },
+          { id: 6, name: 'External SSD 1TB', quantity: 30, price: 129.99, category: 'Storage' }
+        ];
+      } else if (inventoryId === 2) {
+        inventoryItems = [
+          { id: 7, name: 'Chocolate Cake', quantity: 8, price: 32.99, category: 'Cakes' },
+          { id: 8, name: 'Vanilla Cupcakes', quantity: 48, price: 3.99, category: 'Cupcakes' },
+          { id: 9, name: 'Apple Pie', quantity: 6, price: 24.99, category: 'Pies' },
+          { id: 10, name: 'Cookie Box', quantity: 20, price: 15.99, category: 'Cookies' },
+          { id: 11, name: 'Cheesecake', quantity: 5, price: 28.99, category: 'Cakes' },
+          { id: 12, name: 'Birthday Cake', quantity: 3, price: 45.99, category: 'Custom Orders' }
+        ];
+      } else if (inventoryId === 3) {
+        inventoryItems = [
+          { id: 13, name: 'Arc Reactor', quantity: 1, price: 999999.99, category: 'Power Sources' },
+          { id: 14, name: 'Iron Man Suit Mk3', quantity: 1, price: 1999999.99, category: 'Defense Systems' },
+          { id: 15, name: 'Repulsor Gloves', quantity: 5, price: 49999.99, category: 'Weapons' },
+          { id: 16, name: 'AI Assistant Core', quantity: 3, price: 299999.99, category: 'Software' },
+          { id: 17, name: 'Nanotech Container', quantity: 2, price: 499999.99, category: 'Materials' },
+          { id: 18, name: 'Quantum Tunnel', quantity: 1, price: 2999999.99, category: 'Research Equipment' }
+        ];
+      }
   
-  //     if (searchQuery) {
-  //       inventoryItems = inventoryItems.filter(item => 
-  //         item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  //       );
-  //     }
+      if (searchQuery) {
+        inventoryItems = inventoryItems.filter(item => 
+          item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
   
-  //     setItems(inventoryItems);
-  //   } catch (error) {
-  //     console.error("Error fetching items:", error);
-  //     Alert.alert("Error", "Failed to load inventory items.");
-  //   }
-  // };
+      setItems(inventoryItems);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      Alert.alert("Error", "Failed to load inventory items.");
+    }
+  };
 
 
   
