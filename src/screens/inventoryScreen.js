@@ -8,10 +8,13 @@ import {
   Alert,
   ScrollView 
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+// import { FontAwesome } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
 
 const CreateInventoryScreen = ({ navigation }) => {
+
+  // const invExampel = {id: 1, name:"carl", description:"a guy", location:"his house"};
+
   const [inventoryName, setInventoryName] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -38,25 +41,27 @@ const CreateInventoryScreen = ({ navigation }) => {
 
   const createTables = async (database) => {
     try {
-      // Drop existing table to ensure clean slate
-      await database.execAsync('DROP TABLE IF EXISTS Inventory');
-      
-      // Create new table with simple structure
       const createTableQuery = `
         CREATE TABLE IF NOT EXISTS Inventory (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          description TEXT,
-          location TEXT
+          name TEXT NOT NULL DEFAULT '',
+          description TEXT DEFAULT '',
+          location TEXT DEFAULT ''
         )
       `;
       
       await database.execAsync(createTableQuery);
-      console.log("Table created successfully");
+      console.log("Table creation completed");
       
-      // Verify table structure
+      // Verify the table structure
       const tableInfo = await database.execAsync("PRAGMA table_info(Inventory)");
-      console.log("Table structure:", tableInfo);
+      console.log("Current table structure:", tableInfo);
+      
+      // Verify the table exists
+      const tableExists = await database.execAsync(`
+        SELECT name FROM sqlite_master WHERE type='table' AND name='Inventory'
+      `);
+      console.log("Table exists check:", tableExists);
       
     } catch (error) {
       console.error("Error in createTables:", error);
@@ -67,13 +72,13 @@ const CreateInventoryScreen = ({ navigation }) => {
     }
   };
 
-  const validateInputs = () => {
-    if (!inventoryName.trim()) {
-      Alert.alert("Error", "Inventory name is required");
-      return false;
-    }
-    return true;
-  };
+  // const validateInputs = () => {
+  //   if (!inventoryName.trim()) {
+  //     Alert.alert("Error", "Inventory name is required");
+  //     return false;
+  //   }
+  //   return true;
+  // };
 
   const handleCreateInventory = async () => {
     if (isLoading || !db) return;
@@ -90,61 +95,56 @@ const CreateInventoryScreen = ({ navigation }) => {
     setIsLoading(true);
   
     try {
-      // First verify the table exists
-      const tableCheck = await db.execAsync(`
-        SELECT name FROM sqlite_master WHERE type='table' AND name='Inventory'
+      // First verify table structure
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS Inventory (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          location TEXT
+        )
       `);
-      console.log("Table check result:", tableCheck);
   
-      // Simplify the insert statement
+      // Direct insert without parameters
       const query = `
         INSERT INTO Inventory (name, description, location) 
         VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
       `;
-      console.log("Executing query:", query);
+      
+      await db.execAsync(query);
+      
+      // Verify the insert
+      const check = await db.execAsync('SELECT * FROM Inventory');
+      console.log("Insert verification:", check);
   
-      const result = await db.execAsync(query);
-      console.log("Insert result:", result);
-  
-      Alert.alert(
-        "Success",
-        "Inventory created successfully!",
-        [
-          {
-            text: "Add Items",
-            onPress: () => navigation.navigate("add", { 
-              inventoryName: trimmedName 
-            })
-          },
-          {
-            text: "View Inventories",
-            onPress: () => navigation.navigate("invViewer")
-          }
-        ]
-      );
+      Alert.alert("Success", "Inventory created successfully!");
+      navigation.navigate("invViewer");
   
       setInventoryName("");
       setDescription("");
       setLocation("");
   
     } catch (error) {
-      console.error("Error creating inventory:", error);
-      
-      // Try to get more information about the table structure
-      try {
-        const tableInfo = await db.execAsync("PRAGMA table_info(Inventory)");
-        console.log("Table structure:", tableInfo);
-      } catch (e) {
-        console.error("Could not get table info:", e);
-      }
-  
-      Alert.alert(
-        "Error",
-        "There was an error creating the inventory. Please try again."
-      );
+      console.error("Insert error:", error);
+      Alert.alert("Error", "Failed to create inventory");
     } finally {
       setIsLoading(false);
     }
+
+    try {
+      // Test insert
+      await db.execAsync(`
+        INSERT INTO Inventory (name, description, location)
+        VALUES ('Test1', 'Test Desc', 'Test Loc')
+      `);
+      
+      // Verify insert
+      const result = await db.execAsync('SELECT * FROM Inventory');
+      console.log("Create Screen - Data:", result);
+    } catch (error) {
+      console.error("Insert error:", error);
+    }
+ 
   };
 
 
@@ -156,7 +156,7 @@ const CreateInventoryScreen = ({ navigation }) => {
 
       <View style={styles.formContainer}>
         <View style={styles.iconContainer}>
-          <FontAwesome name="warehouse" size={50} color="#6C48C5" />
+          {/* <FontAwesome name="warehouse" size={50} color="#6C48C5" /> */}
         </View>
 
         <Text style={styles.label}>Inventory Name*</Text>

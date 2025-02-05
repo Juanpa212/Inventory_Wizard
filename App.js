@@ -83,7 +83,7 @@ import { SQLiteProvider } from "expo-sqlite";
 import HelpCenter from "./src/screens/HelpCenter";
 import CreateInventoryScreen from "./src/screens/inventoryScreen";
 import stockLevels from "./src/screens/stockLevels";
-import InventoryViewer from './src/screens/inventoryViewer';
+import InventoryViewer from './src/screens/InventoryViewer';
 import teamViewer from './src/screens/teamViewer';
 
 
