@@ -86,6 +86,7 @@ import CreateInventoryScreen from "./src/screens/inventoryScreen";
 import stockLevels from "./src/screens/stockLevels";
 import InventoryViewer from './src/screens/InventoryViewer';
 import teamViewer from './src/screens/teamViewer';
+import InventoryManagerScreen from './src/screens/inventoryManager';
 
 
 
@@ -137,8 +138,8 @@ function App() {
           <Stack.Screen name="invoiceManager" component={InvoiceManager} />
           <Stack.Screen name="help" component={HelpCenter} />
           <Stack.Screen name="inventory" component={CreateInventoryScreen} />
-          <Stack.Screen name="stock" component={StockLevels} />
-          <Stack.Screen name="inventoryManager" component={InventoryManager} />
+          <Stack.Screen name="StockLevels" component={stockLevels} />
+          <Stack.Screen name="inventoryManager" component={InventoryManagerScreen} />
           <Stack.Screen name="createInvoice" component={InvoiceCreator} />
           <Stack.Screen name="invViewer" component={InventoryViewer} />
           <Stack.Screen name="teamViewer" component={teamViewer} />

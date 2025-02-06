@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-const InventoryScreen = () => {
+const InventoryManagerScreen = () => {
     const navigation = useNavigation();
   return (
     <View style={styles.container}>
@@ -91,4 +91,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default InventoryScreen;
+export default InventoryManagerScreen;
