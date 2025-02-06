@@ -19,7 +19,7 @@ const StartScreen = ({ navigation }) => {
       {/* Buttons */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("createInventory")}
+        onPress={() => navigation.navigate("inventory")}
       >
 
         <Text style={styles.buttonText}>Create Inventory</Text>

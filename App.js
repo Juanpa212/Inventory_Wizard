@@ -83,9 +83,10 @@ import InvoiceManager from './src/screens/invoiceManager';
 import { SQLiteProvider } from "expo-sqlite";
 import HelpCenter from "./src/screens/HelpCenter";
 import CreateInventoryScreen from "./src/screens/inventoryScreen";
-import stockLevels from "./src/screens/stockLevels";
+import StockLevels from "./src/screens/StockLevels";
 import InventoryViewer from './src/screens/InventoryViewer';
 import teamViewer from './src/screens/teamViewer';
+import InventoryScreen from './src/screens/inventoryManager';
 
 
 
@@ -138,7 +139,7 @@ function App() {
           <Stack.Screen name="help" component={HelpCenter} />
           <Stack.Screen name="inventory" component={CreateInventoryScreen} />
           <Stack.Screen name="stock" component={StockLevels} />
-          <Stack.Screen name="inventoryManager" component={InventoryManager} />
+          <Stack.Screen name="inventoryManager" component={InventoryScreen} />
           <Stack.Screen name="createInvoice" component={InvoiceCreator} />
           <Stack.Screen name="invViewer" component={InventoryViewer} />
           <Stack.Screen name="teamViewer" component={teamViewer} />
