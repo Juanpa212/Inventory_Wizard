@@ -6,148 +6,159 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert
+  Alert,
 } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
 import { FontAwesome } from "@expo/vector-icons";
-import * as SQLite from 'expo-sqlite';
+import { initDatabase, addItem, verifyDatabaseState } from './databaseHelper';
 
-import { useNavigation, useRoute } from '@react-navigation/native'; //navigation hooks
-
-const addItemScreen = () => {
-// const addItemScreen = ({ navigation }) => {
-
-  // use of hooks inside the component
-  const navigation = useNavigation();
-  const route = useRoute();
-
-  // Form state
-  const [name, setName] = useState("");
+const addItemScreen = ({ route, navigation }) => {
+  const inventoryId = route.params?.inventoryId;
+  console.log('Received inventoryId:', inventoryId);
+  
+  const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [priority, setPriority] = useState("");
-  const [brand, setBrand] = useState("");
-  const [description, setDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [db, setDb] = useState(null);
-  const [inventoryId, setInventoryId] = useState(1);
-
-  // Dropdown data
-  const categoryData = [
-    { label: "Stickers", value: "Stickers" },
-    { label: "Books", value: "Books" },
-    { label: "Clothing", value: "Clothing" },
-  ];
-
-  const priorityData = [
-    { label: "High", value: "High" },
-    { label: "Medium", value: "Medium" },
-    { label: "Low", value: "Low" },
-  ];
-
-  const brandData = [
-    { label: "Very_OK", value: "Very_OK" },
-    { label: "Lil_Sad", value: "Lil_Sad" },
-    { label: "CyberGoth", value: "CyberGoth" },
-  ];
-
-  // getting the inventory
-  useEffect(() => {
-    if (route.params?.inventory_id) {
-      setInventoryId(route.params.inventory_id);
-    }
-  }, [route.params]);
 
   useEffect(() => {
     const setupDatabase = async () => {
       try {
-        const database = await SQLite.openDatabaseAsync('MainDB.db');
+        const database = await initDatabase();
         setDb(database);
-
-        await database.execAsync(`
-          CREATE TABLE IF NOT EXISTS items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            inventory_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            category TEXT,
-            brand TEXT,
-            price REAL,
-            priority TEXT,
-            description TEXT
-          )
-        `);
-
-        console.log("Database and table setup complete");
+        
+        // Verify database state
+        const dbState = await verifyDatabaseState(database);
+        console.log('Initial database state:', dbState);
+        
+        // Enable foreign keys
+        await database.execAsync('PRAGMA foreign_keys = ON;');
+        
       } catch (error) {
         console.error("Database setup error:", error);
-        Alert.alert(
-          "Database Error",
-          "There was an error setting up the database. Please restart the app."
-        );
+        Alert.alert("Error", "Failed to initialize database");
       }
     };
-
+    
     setupDatabase();
-
-    // Get inventory ID from navigation if available
-    const currentRoute = navigation.getState().routes.find(route => route.name === 'add');
-    if (currentRoute?.params?.inventory_id) {
-      setInventoryId(currentRoute.params.inventory_id);
-    }
   }, []);
 
   const handleAddItem = async () => {
-    if (isLoading || !db) return;
+    console.log('handleAddItem called with values:', {
+      inventoryId,
+      itemName,
+      quantity,
+      price,
+      category
+    });
 
-    // Validate inputs
-    if (!name.trim() || !quantity.trim() || !price.trim()) {
+    if (!db) {
+      Alert.alert("Error", "Database not initialized");
+      return;
+    }
+
+    if (!inventoryId) {
+      Alert.alert("Error", "No inventory selected");
+      return;
+    }
+
+    // Validate required fields
+    if (!itemName.trim() || !quantity.trim() || !price.trim()) {
       Alert.alert("Error", "Please fill in all required fields");
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      const insertQuery = `
-        INSERT INTO items (inventory_id, name, quantity, category, brand, price, priority, description)
-        VALUES ("${inventoryId}", "${name.trim()}", "${quantity}", "${category}", "${brand}", "${price}", "${priority}", "${description}")
-      `;
+      // Verify database state before adding
+      const beforeState = await verifyDatabaseState(db);
+      console.log('Database state before adding item:', beforeState);
 
-      console.log("Executing query:", insertQuery);
-      await db.execAsync(insertQuery);
-      
+      const newItem = {
+        inventory_id: parseInt(inventoryId),  // Ensure it's a number
+        name: itemName.trim(),
+        quantity: parseInt(quantity),
+        price: parseFloat(price),
+        category: category.trim()
+      };
+
+      const addedItem = await addItem(db, newItem);
+      console.log('Item added successfully:', addedItem);
+
+      // Verify database state after adding
+      const afterState = await verifyDatabaseState(db);
+      console.log('Database state after adding item:', afterState);
+
       Alert.alert(
         "Success",
         "Item added successfully!",
         [
           {
-            text: "Add Another", 
+            text: "View Inventory",
             onPress: () => {
-              setName("");
-              setQuantity("");
-              setPrice("");
-              setCategory("");
-              setPriority("");
-              setBrand("");
-              setDescription("");
+              navigation.navigate("invViewer", {
+                inventoryId: parseInt(inventoryId)
+              });
             }
           },
           {
-            text: "View Inventory",
-            onPress: () => navigation.navigate("invViewer")  // must change to navigation to view inventory page
+            text: "Add Another",
+            onPress: () => {
+              setItemName("");
+              setQuantity("");
+              setPrice("");
+              setCategory("");
+            }
           }
         ]
       );
     } catch (error) {
-      console.error("Error adding item:", error);
-      Alert.alert(
-        "Error",
-        "Failed to add item. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
+      console.error("Insert error:", error);
+      Alert.alert("Error", `Failed to add item: ${error.message}`);
+    }
+  };
+  const showInputAlert = (fieldName, requirements) => {
+    Alert.alert(
+      `Invalid ${fieldName}`,
+      `${fieldName} ${requirements}`,
+      [{ text: "OK", style: "default" }]
+    );
+  };
+
+  const handleInputValidation = {
+    name: (text) => {
+      const letterOnly = /^[A-Za-z\s]*$/;
+      if (!letterOnly.test(text) && text !== "") {
+        showInputAlert("Item Name", "must contain only letters and spaces");
+        return itemName;
+      }
+      return text;
+    },
+    
+    quantity: (text) => {
+      const integerOnly = /^\d*$/;
+      if (!integerOnly.test(text) && text !== "") {
+        showInputAlert("Quantity", "must be a whole number");
+        return quantity;
+      }
+      return text;
+    },
+    
+    price: (text) => {
+      const doubleOnly = /^\d*\.?\d*$/;
+      if (!doubleOnly.test(text) && text !== "") {
+        showInputAlert("Price", "must be a valid number (e.g., 12.99)");
+        return price;
+      }
+      return text;
+    },
+    
+    category: (text) => {
+      const letterOnly = /^[A-Za-z\s]*$/;
+      if (!letterOnly.test(text) && text !== "") {
+        showInputAlert("Category", "must contain only letters and spaces");
+        return category;
+      }
+      return text;
     }
   };
 
@@ -156,108 +167,60 @@ const addItemScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerText}>Add New Item</Text>
       </View>
-
+      
       <ScrollView style={styles.scrollView}>
         <View style={styles.container}>
           <View style={styles.iconContainer}>
             <FontAwesome name="plus-circle" size={50} color="#6C48C5" />
           </View>
-
-          <Text style={styles.label}>
-            Name<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Enter item name" 
-            value={name}
-            onChangeText={setName}
-          />
-
-          <Text style={styles.label}>
-            Quantity<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Enter quantity" 
-            keyboardType="numeric"
-            value={quantity}
-            onChangeText={setQuantity}
-          />
-
-          <Text style={styles.label}>
-            Price<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Enter price" 
-            keyboardType="numeric"
-            value={price}
-            onChangeText={setPrice}
-          />
-
-          <Text style={styles.label}>
-            Category<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={categoryData}
-            labelField="label"
-            valueField="value"
-            placeholder="Select category"
-            value={category}
-            onChange={item => setCategory(item.value)}
-          />
-
-          <Text style={styles.label}>
-            Priority<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={priorityData}
-            labelField="label"
-            valueField="value"
-            placeholder="Select priority"
-            value={priority}
-            onChange={item => setPriority(item.value)}
-          />
-
-          <Text style={styles.label}>
-            Brand<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={brandData}
-            labelField="label"
-            valueField="value"
-            placeholder="Select brand"
-            value={brand}
-            onChange={item => setBrand(item.value)}
-          />
-
-          <Text style={styles.label}>Description</Text>
+ 
+          <Text style={styles.label}>Item Name<Text style={styles.required}>*</Text></Text>
+          <Text style={styles.helperText}>Letters and spaces only</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Enter item description..."
-            multiline
-            numberOfLines={4}
-            value={description}
-            onChangeText={setDescription}
+            style={styles.input}
+            placeholder="Enter item name"
+            value={itemName}
+            onChangeText={(text) => setItemName(handleInputValidation.name(text))}
           />
-
+ 
+          <Text style={styles.label}>Quantity<Text style={styles.required}>*</Text></Text>
+          <Text style={styles.helperText}>Whole numbers only</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter a quantity"
+            value={quantity}
+            onChangeText={(text) => setQuantity(handleInputValidation.quantity(text))}
+            keyboardType="numeric"
+          />
+ 
+          <Text style={styles.label}>Price<Text style={styles.required}>*</Text></Text>
+          <Text style={styles.helperText}>Numbers and one decimal point only (e.g., 12.99)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter price"
+            value={price}
+            onChangeText={(text) => setPrice(handleInputValidation.price(text))}
+            keyboardType="decimal-pad"
+          />
+ 
+          <Text style={styles.label}>Category</Text>
+          <Text style={styles.helperText}>Letters and spaces only</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter category"
+            value={category}
+            onChangeText={(text) => setCategory(handleInputValidation.category(text))}
+          />
+ 
           <TouchableOpacity 
-            style={[
-              styles.button,
-              isLoading && styles.buttonDisabled
-            ]} 
+            style={[styles.button, (!itemName || !quantity || !price) && styles.buttonDisabled]} 
             onPress={handleAddItem}
-            disabled={isLoading}
+            disabled={!itemName || !quantity || !price}
           >
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Adding Item...' : 'Add Item'}
-            </Text>
+            <Text style={styles.buttonText}>Add Item</Text>
           </TouchableOpacity>
-
-          <Text style={styles.requiredText}>*Required fields</Text>
+ 
+          <Text style={styles.requiredText}>* Required fields</Text>
         </View>
       </ScrollView>
     </View>
@@ -295,6 +258,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#333',
   },
+  helperText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+    marginBottom: 4,
+  },
   required: {
     color: "#FF4444",
     marginLeft: 4,
@@ -308,19 +277,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 10,
     fontSize: 16,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  dropdown: {
-    backgroundColor: '#F9F9F9',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 5,
-    marginBottom: 10,
   },
   button: {
     backgroundColor: '#6C48C5',

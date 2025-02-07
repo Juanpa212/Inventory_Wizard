@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  Button,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
@@ -39,7 +40,8 @@ const InventoryViewer = ({ navigation }) => {
   useEffect(() => {
     console.log("Current inventories state:", inventories);
   }, [inventories]);
-
+  
+  
   const initDatabase = async () => {
     try {
       const database = await SQLite.openDatabaseAsync('MainDB.db');
@@ -65,6 +67,15 @@ const InventoryViewer = ({ navigation }) => {
         );
       `);
   
+      // Verify table structure
+      const tableInfo = await database.getAllAsync('PRAGMA table_info(Inventory)');
+      console.log("Current table structure:", tableInfo);
+  
+      // Verify table exists
+      const tableExists = await database.getAllAsync(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='Inventory'"
+      );
+      console.log("Table exists check:", tableExists);
   
       await fetchInventories(database);
       setIsLoading(false);
@@ -73,37 +84,79 @@ const InventoryViewer = ({ navigation }) => {
       setIsLoading(false);
     }
   };
+
+  const fetchInventories = async (database) => {
+    try {
+      const result = await database.getAllAsync('SELECT * FROM Inventory');
+      console.log("Viewer - Data:", result);
   
+      if (result && result.length > 0) {
+        setInventories(result);
+      } else {
+        console.log("No data found in Inventory table.");
+        setInventories([]);
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      Alert.alert("Error", "Failed to fetch inventories.");
+    }
+  };
 
-  // const fetchInventories = async (database) => {
-  //   try {
-  //     // Test select
-  //     const result = await database.execAsync('SELECT * FROM Inventory');
-  //     console.log("Viewer - Data:", result);
-      
-  //     if (result?.[0]?.rows) {
-  //       setInventories(result[0].rows);
-  //     }
-  //   } catch (error) {
-  //     console.error("Fetch error:", error);
-  //   }
-  // };
+  const handleCreateInventory = async () => {
+    if (isLoading || !db) return;
+  
+    const trimmedName = inventoryName.trim();
+    const trimmedDescription = description.trim();
+    const trimmedLocation = location.trim();
+  
+    if (!trimmedName) {
+      Alert.alert("Error", "Inventory name is required");
+      return;
+    }
+  
+    setIsLoading(true);
+  
+    try {
+      // Insert new inventory
+      await db.execAsync(`
+        INSERT INTO Inventory (name, description, location) 
+        VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
+      `);
+  
+      // Fetch the ID of the newly created inventory
+      const result = await db.getAllAsync('SELECT last_insert_rowid() as id');
+      const newInventoryId = result[0].id;
+  
+      console.log("New inventory ID:", newInventoryId);
+  
+      Alert.alert("Success", "Inventory created successfully!");
+      navigation.navigate("invViewer", { inventoryId: newInventoryId });
+  
+      setInventoryName("");
+      setDescription("");
+      setLocation("");
+    } catch (error) {
+      console.error("Insert error:", error);
+      Alert.alert("Error", "Failed to create inventory");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-
-  // const fetchItems = async (inventoryId) => {
-  //   try {
-  //     const query = `
-  //       SELECT * FROM items 
-  //       WHERE inventory_id = ? AND name LIKE '%${searchQuery}%'
-  //       ORDER BY ${sortBy} ${sortOrder}
-  //     `;
-  //     const result = await db.execAsync(query, [inventoryId]);
-  //     setItems(result || []);
-  //   } catch (error) {
-  //     console.error("Error fetching items:", error);
-  //     Alert.alert("Error", "Failed to load inventory items.");
-  //   }
-  // };
+  const fetchItems = async (inventoryId) => {
+    try {
+      const query = `
+        SELECT * FROM items 
+        WHERE inventory_id = ? AND name LIKE '%${searchQuery}%'
+        ORDER BY ${sortBy} ${sortOrder}
+      `;
+      const result = await db.execAsync(query, [inventoryId]);
+      setItems(result || []);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      Alert.alert("Error", "Failed to load inventory items.");
+    }
+  };
 
 
   const selectInventory = async (inventory) => {
@@ -126,68 +179,68 @@ const InventoryViewer = ({ navigation }) => {
 
   // HARD CODED BACKUP
 
-  const fetchInventories = async (database) => {
-    try {
-      const inventories = [
-        { id: 1, name: "Compu Solutions", description: "A local IT shop", location: "Market Plaza" },
-        { id: 2, name: "Fresh Sweets", description: "A family bakery", location: "Carolina" },
-        { id: 3, name: "Stark labs", description: "A Genius. Billionaire. Philanthropist. Laboratory", location: "his house" }
-      ];
-      setInventories(inventories);
+  // const fetchInventories = async (database) => {
+  //   try {
+  //     const inventories = [
+  //       { id: 1, name: "Compu Solutions", description: "A local IT shop", location: "Market Plaza" },
+  //       { id: 2, name: "Fresh Sweets", description: "A family bakery", location: "Carolina" },
+  //       { id: 3, name: "Stark labs", description: "A Genius. Billionaire. Philanthropist. Laboratory", location: "his house" }
+  //     ];
+  //     setInventories(inventories);
       
-      // Log the state after setting
-      console.log("Set inventories to:", inventories);
-    } catch (error) {
-      console.error("Fetch error:", error);
-    }
-  };
+  //     // Log the state after setting
+  //     console.log("Set inventories to:", inventories);
+  //   } catch (error) {
+  //     console.error("Fetch error:", error);
+  //   }
+  // };
 
-  const fetchItems = async (inventoryId) => {
-    try {
-      // Hardcoded items based on inventory ID
-      let inventoryItems = [];
+  // const fetchItems = async (inventoryId) => {
+  //   try {
+  //     // Hardcoded items based on inventory ID
+  //     let inventoryItems = [];
   
-      if (inventoryId === 1) {
-        inventoryItems = [
-          { id: 1, name: 'Desktop PC', quantity: 15, price: 899.99, category: 'Computers' },
-          { id: 2, name: 'Gaming Laptop', quantity: 8, price: 1299.99, category: 'Computers' },
-          { id: 3, name: 'Mechanical Keyboard', quantity: 25, price: 89.99, category: 'Peripherals' },
-          { id: 4, name: 'Wireless Mouse', quantity: 40, price: 29.99, category: 'Peripherals' },
-          { id: 5, name: 'Monitor 27"', quantity: 12, price: 299.99, category: 'Displays' },
-          { id: 6, name: 'External SSD 1TB', quantity: 30, price: 129.99, category: 'Storage' }
-        ];
-      } else if (inventoryId === 2) {
-        inventoryItems = [
-          { id: 7, name: 'Chocolate Cake', quantity: 8, price: 32.99, category: 'Cakes' },
-          { id: 8, name: 'Vanilla Cupcakes', quantity: 48, price: 3.99, category: 'Cupcakes' },
-          { id: 9, name: 'Apple Pie', quantity: 6, price: 24.99, category: 'Pies' },
-          { id: 10, name: 'Cookie Box', quantity: 20, price: 15.99, category: 'Cookies' },
-          { id: 11, name: 'Cheesecake', quantity: 5, price: 28.99, category: 'Cakes' },
-          { id: 12, name: 'Birthday Cake', quantity: 3, price: 45.99, category: 'Custom Orders' }
-        ];
-      } else if (inventoryId === 3) {
-        inventoryItems = [
-          { id: 13, name: 'Arc Reactor', quantity: 1, price: 999999.99, category: 'Power Sources' },
-          { id: 14, name: 'Iron Man Suit Mk3', quantity: 1, price: 1999999.99, category: 'Defense Systems' },
-          { id: 15, name: 'Repulsor Gloves', quantity: 5, price: 49999.99, category: 'Weapons' },
-          { id: 16, name: 'AI Assistant Core', quantity: 3, price: 299999.99, category: 'Software' },
-          { id: 17, name: 'Nanotech Container', quantity: 2, price: 499999.99, category: 'Materials' },
-          { id: 18, name: 'Quantum Tunnel', quantity: 1, price: 2999999.99, category: 'Research Equipment' }
-        ];
-      }
+  //     if (inventoryId === 1) {
+  //       inventoryItems = [
+  //         { id: 1, name: 'Desktop PC', quantity: 15, price: 899.99, category: 'Computers' },
+  //         { id: 2, name: 'Gaming Laptop', quantity: 8, price: 1299.99, category: 'Computers' },
+  //         { id: 3, name: 'Mechanical Keyboard', quantity: 25, price: 89.99, category: 'Peripherals' },
+  //         { id: 4, name: 'Wireless Mouse', quantity: 40, price: 29.99, category: 'Peripherals' },
+  //         { id: 5, name: 'Monitor 27"', quantity: 12, price: 299.99, category: 'Displays' },
+  //         { id: 6, name: 'External SSD 1TB', quantity: 30, price: 129.99, category: 'Storage' }
+  //       ];
+  //     } else if (inventoryId === 2) {
+  //       inventoryItems = [
+  //         { id: 7, name: 'Chocolate Cake', quantity: 8, price: 32.99, category: 'Cakes' },
+  //         { id: 8, name: 'Vanilla Cupcakes', quantity: 48, price: 3.99, category: 'Cupcakes' },
+  //         { id: 9, name: 'Apple Pie', quantity: 6, price: 24.99, category: 'Pies' },
+  //         { id: 10, name: 'Cookie Box', quantity: 20, price: 15.99, category: 'Cookies' },
+  //         { id: 11, name: 'Cheesecake', quantity: 5, price: 28.99, category: 'Cakes' },
+  //         { id: 12, name: 'Birthday Cake', quantity: 3, price: 45.99, category: 'Custom Orders' }
+  //       ];
+  //     } else if (inventoryId === 3) {
+  //       inventoryItems = [
+  //         { id: 13, name: 'Arc Reactor', quantity: 1, price: 999999.99, category: 'Power Sources' },
+  //         { id: 14, name: 'Iron Man Suit Mk3', quantity: 1, price: 1999999.99, category: 'Defense Systems' },
+  //         { id: 15, name: 'Repulsor Gloves', quantity: 5, price: 49999.99, category: 'Weapons' },
+  //         { id: 16, name: 'AI Assistant Core', quantity: 3, price: 299999.99, category: 'Software' },
+  //         { id: 17, name: 'Nanotech Container', quantity: 2, price: 499999.99, category: 'Materials' },
+  //         { id: 18, name: 'Quantum Tunnel', quantity: 1, price: 2999999.99, category: 'Research Equipment' }
+  //       ];
+  //     }
   
-      if (searchQuery) {
-        inventoryItems = inventoryItems.filter(item => 
-          item.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
+  //     if (searchQuery) {
+  //       inventoryItems = inventoryItems.filter(item => 
+  //         item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  //       );
+  //     }
   
-      setItems(inventoryItems);
-    } catch (error) {
-      console.error("Error fetching items:", error);
-      Alert.alert("Error", "Failed to load inventory items.");
-    }
-  };
+  //     setItems(inventoryItems);
+  //   } catch (error) {
+  //     console.error("Error fetching items:", error);
+  //     Alert.alert("Error", "Failed to load inventory items.");
+  //   }
+  // };
 
 
   
@@ -328,35 +381,26 @@ const InventoryViewer = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
       </View>
-
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search items..."
-          value={searchQuery}
-          onChangeText={(text) => {
-            setSearchQuery(text);
-            fetchItems(selectedInventory.id);
-          }}
-        />
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => navigation.navigate('AddItem', { inventory_id: selectedInventory.id })}
-        >
-          <FontAwesome name="plus" size={20} color="#FFF" />
-          <Text style={styles.addButtonText}>Add Item</Text>
-        </TouchableOpacity>
-      </View>
-
+  
       {items.length === 0 ? (
         <View style={styles.centerContent}>
           <Text>No items found in inventory.</Text>
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => {
+              console.log('Navigating to add with inventoryId:', selectedInventory.id);
+              navigation.navigate('add', {
+                inventoryId: parseInt(selectedInventory.id)  // Make sure it's a number
+              });
+            }}
+>
+            <Text style={styles.addButtonText}>Add Items</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView horizontal>
           <ScrollView style={styles.tableContainer}>
             {renderTableHeader()}
-            
             {items.map((item, index) => (
               <View 
                 key={item.id} 
@@ -390,6 +434,79 @@ const InventoryViewer = ({ navigation }) => {
       )}
     </View>
   );
+  // const renderInventoryContents = () => (
+  //   <View style={styles.container}>
+  //     <View style={styles.header}>
+  //       <TouchableOpacity 
+  //         style={styles.backButton}
+  //         onPress={() => setShowInventorySelector(true)}
+  //       >
+  //         <FontAwesome name="chevron-left" size={20} color="#FFF" />
+  //       </TouchableOpacity>
+  //       <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
+  //     </View>
+
+  //     <View style={styles.searchContainer}>
+  //       <TextInput
+  //         style={styles.searchInput}
+  //         placeholder="Search items..."
+  //         value={searchQuery}
+  //         onChangeText={(text) => {
+  //           setSearchQuery(text);
+  //           fetchItems(selectedInventory.id);
+  //         }}
+  //       />
+  //       <TouchableOpacity 
+  //         style={styles.addButton}
+  //         onPress={() => navigation.navigate('AddItem', { inventory_id: selectedInventory.id })}
+  //       >
+  //         <FontAwesome name="plus" size={20} color="#FFF" />
+  //         <Text style={styles.addButtonText}>Add Item</Text>
+  //       </TouchableOpacity>
+  //     </View>
+
+  //     {items.length === 0 ? (
+  //       <View style={styles.centerContent}>
+  //         <Text>No items found in inventory.</Text>
+  //       </View>
+  //     ) : (
+  //       <ScrollView horizontal>
+  //         <ScrollView style={styles.tableContainer}>
+  //           {renderTableHeader()}
+            
+  //           {items.map((item, index) => (
+  //             <View 
+  //               key={item.id} 
+  //               style={[
+  //                 styles.tableRow,
+  //                 index % 2 === 0 ? styles.evenRow : styles.oddRow
+  //               ]}
+  //             >
+  //               <Text style={styles.cell}>{item.name}</Text>
+  //               <Text style={styles.cell}>{item.quantity}</Text>
+  //               <Text style={styles.cell}>${item.price}</Text>
+  //               <Text style={styles.cell}>{item.category}</Text>
+  //               <View style={styles.actionsCell}>
+  //                 <TouchableOpacity 
+  //                   style={styles.actionButton}
+  //                   onPress={() => handleEdit(item)}
+  //                 >
+  //                   <FontAwesome name="edit" size={20} color="#6C48C5" />
+  //                 </TouchableOpacity>
+  //                 <TouchableOpacity 
+  //                   style={styles.actionButton}
+  //                   onPress={() => handleDelete(item.id)}
+  //                 >
+  //                   <FontAwesome name="trash" size={20} color="#FF4444" />
+  //                 </TouchableOpacity>
+  //               </View>
+  //             </View>
+  //           ))}
+  //         </ScrollView>
+  //       </ScrollView>
+  //     )}
+  //   </View>
+  // );
 
   // Single return statement at the end
   if (isLoading) {
