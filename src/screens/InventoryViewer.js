@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
+import { deleteInventory } from './databaseHelper';
 
 const InventoryViewer = ({ navigation }) => {
     const [db, setDb] = useState(null);
@@ -175,6 +176,34 @@ const InventoryViewer = ({ navigation }) => {
     fetchItems(selectedInventory.id);
   };
 
+  const handleDeleteInventory = async (inventory) => {
+    Alert.alert(
+      "Delete Inventory",
+      `Are you sure you want to delete "${inventory.name}"? This will also delete all items in this inventory.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteInventory(db, inventory.id);
+              Alert.alert("Success", "Inventory deleted successfully");
+              await fetchInventories(db);
+              setShowInventorySelector(true);
+            } catch (error) {
+              console.error("Error deleting inventory:", error);
+              Alert.alert("Error", "Failed to delete inventory");
+            }
+          }
+        }
+      ]
+    );
+  };
+  
 
 
   // HARD CODED BACKUP
@@ -244,8 +273,8 @@ const InventoryViewer = ({ navigation }) => {
 
 
   
-
-  // Render inventory selection screen
+ 
+  // Update your renderInventorySelector function to include the delete button
   const renderInventorySelector = () => (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -264,26 +293,33 @@ const InventoryViewer = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         ) : (
-          inventories.map((inventory, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.inventoryItem}
-              onPress={() => selectInventory(inventory)}
-            >
-              <View>
-                <Text style={styles.inventoryName}>{inventory.name || 'Unnamed Inventory'}</Text>
-                <Text style={styles.inventoryDescription}>
-                  {inventory.description || 'No description'}
-                </Text>
-              </View>
-              <FontAwesome name="chevron-right" size={20} color="#6C48C5" />
-            </TouchableOpacity>
+          inventories.map((inventory) => (
+            <View key={inventory.id} style={styles.inventoryItemContainer}>
+              <TouchableOpacity
+                style={styles.inventoryItem}
+                onPress={() => selectInventory(inventory)}
+              >
+                <View>
+                  <Text style={styles.inventoryName}>{inventory.name}</Text>
+                  <Text style={styles.inventoryDescription}>
+                    {inventory.description || 'No description'}
+                  </Text>
+                </View>
+                <FontAwesome name="chevron-right" size={20} color="#6C48C5" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.deleteButton}
+                onPress={() => handleDeleteInventory(inventory)}
+              >
+                <FontAwesome name="trash" size={20} color="#FF4444" />
+              </TouchableOpacity>
+            </View>
           ))
         )}
       </ScrollView>
     </View>
   );
-
+  
   const renderSortIcon = (column) => {
     if (sortBy !== column) return null;
     return (
