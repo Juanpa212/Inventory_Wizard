@@ -8,10 +8,19 @@ import {
   Alert,
   TextInput,
   Button,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as SQLite from 'expo-sqlite';
-import { deleteInventory } from './databaseHelper';
+import { 
+  initDatabase, 
+  deleteInventory, 
+  getInventories, 
+  getItems 
+} from './databaseHelper';
 
 const InventoryViewer = ({ navigation }) => {
     const [db, setDb] = useState(null);
@@ -89,8 +98,8 @@ const InventoryViewer = ({ navigation }) => {
   const fetchInventories = async (database) => {
     try {
       const result = await database.getAllAsync('SELECT * FROM Inventory');
-      console.log("Viewer - Data:", result);
-  
+      console.log("Fetched inventories from database:", result);
+      
       if (result && result.length > 0) {
         setInventories(result);
       } else {
@@ -103,55 +112,67 @@ const InventoryViewer = ({ navigation }) => {
     }
   };
 
-  const handleCreateInventory = async () => {
-    if (isLoading || !db) return;
+  // const handleCreateInventory = async () => {
+  //   if (isLoading || !db) return;
   
-    const trimmedName = inventoryName.trim();
-    const trimmedDescription = description.trim();
-    const trimmedLocation = location.trim();
+  //   const trimmedName = inventoryName.trim();
+  //   const trimmedDescription = description.trim();
+  //   const trimmedLocation = location.trim();
   
-    if (!trimmedName) {
-      Alert.alert("Error", "Inventory name is required");
-      return;
-    }
+  //   if (!trimmedName) {
+  //     Alert.alert("Error", "Inventory name is required");
+  //     return;
+  //   }
   
-    setIsLoading(true);
+  //   setIsLoading(true);
   
-    try {
-      // Insert new inventory
-      await db.execAsync(`
-        INSERT INTO Inventory (name, description, location) 
-        VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
-      `);
+  //   try {
+  //     // Insert new inventory
+  //     await db.execAsync(`
+  //       INSERT INTO Inventory (name, description, location) 
+  //       VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
+  //     `);
   
-      // Fetch the ID of the newly created inventory
-      const result = await db.getAllAsync('SELECT last_insert_rowid() as id');
-      const newInventoryId = result[0].id;
+  //     // Fetch the ID of the newly created inventory
+  //     const result = await db.getAllAsync('SELECT last_insert_rowid() as id');
+  //     const newInventoryId = result[0].id;
   
-      console.log("New inventory ID:", newInventoryId);
+  //     console.log("New inventory ID:", newInventoryId);
   
-      Alert.alert("Success", "Inventory created successfully!");
-      navigation.navigate("invViewer", { inventoryId: newInventoryId });
+  //     Alert.alert("Success", "Inventory created successfully!");
+  //     navigation.navigate("invViewer", { inventoryId: newInventoryId });
   
-      setInventoryName("");
-      setDescription("");
-      setLocation("");
-    } catch (error) {
-      console.error("Insert error:", error);
-      Alert.alert("Error", "Failed to create inventory");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     setInventoryName("");
+  //     setDescription("");
+  //     setLocation("");
+  //   } catch (error) {
+  //     console.error("Insert error:", error);
+  //     Alert.alert("Error", "Failed to create inventory");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const fetchItems = async (inventoryId) => {
     try {
+      console.log(`Fetching items for inventory ${inventoryId}`);
+      
       const query = `
         SELECT * FROM items 
-        WHERE inventory_id = ? AND name LIKE '%${searchQuery}%'
-        ORDER BY ${sortBy} ${sortOrder}
+        WHERE inventory_id = ? 
+        ${searchQuery ? "AND name LIKE ?" : ""}
+        ${sortBy ? `ORDER BY ${sortBy} ${sortOrder}` : ""}
       `;
-      const result = await db.execAsync(query, [inventoryId]);
+      
+      const params = searchQuery 
+        ? [inventoryId, `%${searchQuery}%`]
+        : [inventoryId];
+        
+      console.log('Executing query:', query, 'with params:', params);
+      
+      const result = await db.getAllAsync(query, params);
+      console.log('Fetched items:', result);
+      
       setItems(result || []);
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -176,34 +197,67 @@ const InventoryViewer = ({ navigation }) => {
     fetchItems(selectedInventory.id);
   };
 
-  const handleDeleteInventory = async (inventory) => {
-    Alert.alert(
-      "Delete Inventory",
-      `Are you sure you want to delete "${inventory.name}"? This will also delete all items in this inventory.`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteInventory(db, inventory.id);
-              Alert.alert("Success", "Inventory deleted successfully");
-              await fetchInventories(db);
-              setShowInventorySelector(true);
-            } catch (error) {
-              console.error("Error deleting inventory:", error);
-              Alert.alert("Error", "Failed to delete inventory");
+  const handleCreateInventory = async () => {
+    if (isLoading || !db) {
+      console.log('Early return due to:', { isLoading, hasDb: !!db });
+      return;
+    }
+  
+    const trimmedName = inventoryName.trim();
+    console.log('Trimmed name:', trimmedName);
+  
+    if (!trimmedName) {
+      Alert.alert("Error", "Inventory name is required");
+      return;
+    }
+  
+    setIsLoading(true);
+  
+    try {
+      const newInventory = {
+        name: trimmedName,
+        description: description.trim(),
+        location: location.trim()
+      };
+  
+      console.log('Attempting to create inventory:', newInventory);
+  
+      const createdInventory = await createInventory(db, newInventory);
+      console.log('Successfully created inventory:', createdInventory);
+  
+      // Verify the inventory was created
+      const verifyInventory = await db.getAllAsync('SELECT * FROM Inventory WHERE id = ?', [createdInventory.id]);
+      console.log('Verification result:', verifyInventory);
+  
+      Alert.alert(
+        "Success",
+        "Inventory created successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              navigation.navigate("invViewer", {
+                inventoryId: createdInventory.id
+              });
             }
           }
-        }
-      ]
-    );
-  };
+        ]
+      );
   
+      setInventoryName("");
+      setDescription("");
+      setLocation("");
+  
+    } catch (error) {
+      console.error("Error creating inventory:", error);
+      Alert.alert(
+        "Error", 
+        `Failed to create inventory: ${error.message}`
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   // HARD CODED BACKUP
@@ -407,16 +461,28 @@ const InventoryViewer = ({ navigation }) => {
 
   // Add the missing renderInventoryContents function
   const renderInventoryContents = () => (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => setShowInventorySelector(true)}
-        >
-          <FontAwesome name="chevron-left" size={20} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
-      </View>
+    <KeyboardAvoidingView 
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={styles.container}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+  >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => setShowInventorySelector(true)}
+          >
+            <FontAwesome name="chevron-left" size={20} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => navigation.navigate('add', { inventoryId: selectedInventory.id })}
+          >
+            <FontAwesome name="plus" size={20} color="#FFF" />
+          </TouchableOpacity>
+        </View>
   
       {items.length === 0 ? (
         <View style={styles.centerContent}>
@@ -469,7 +535,10 @@ const InventoryViewer = ({ navigation }) => {
         </ScrollView>
       )}
     </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
+
   // const renderInventoryContents = () => (
   //   <View style={styles.container}>
   //     <View style={styles.header}>
