@@ -60,6 +60,18 @@ export const createInventory = async (db, inventory) => {
   }
 };
 
+ export const deleteInventory = async (db, inventoryId) => {
+  try {
+    // Delete all items in the inventory first
+    await db.runAsync('DELETE FROM items WHERE inventory_id = ?', [inventoryId]);
+    // Delete the inventory
+    await db.runAsync('DELETE FROM Inventory WHERE id = ?', [inventoryId]);
+  } catch (error) {
+    console.error("Error deleting inventory:", error);
+    throw error;
+  }
+};
+
 export const addItem = async (db, item) => {
   try {
     const { inventory_id, name, quantity, price, category } = item;
@@ -79,6 +91,15 @@ export const addItem = async (db, item) => {
     return { id: result.lastInsertRowId, ...item };
   } catch (error) {
     console.error("Error in addItem:", error);
+    throw error;
+  }
+};
+
+export const deleteItem = async (db, itemId) => {
+  try {
+    await db.runAsync('DELETE FROM items WHERE id = ?', [itemId]);
+  } catch (error) {
+    console.error("Error deleting item:", error);
     throw error;
   }
 };

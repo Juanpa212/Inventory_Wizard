@@ -112,47 +112,7 @@ const InventoryViewer = ({ navigation }) => {
     }
   };
 
-  // const handleCreateInventory = async () => {
-  //   if (isLoading || !db) return;
-  
-  //   const trimmedName = inventoryName.trim();
-  //   const trimmedDescription = description.trim();
-  //   const trimmedLocation = location.trim();
-  
-  //   if (!trimmedName) {
-  //     Alert.alert("Error", "Inventory name is required");
-  //     return;
-  //   }
-  
-  //   setIsLoading(true);
-  
-  //   try {
-  //     // Insert new inventory
-  //     await db.execAsync(`
-  //       INSERT INTO Inventory (name, description, location) 
-  //       VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
-  //     `);
-  
-  //     // Fetch the ID of the newly created inventory
-  //     const result = await db.getAllAsync('SELECT last_insert_rowid() as id');
-  //     const newInventoryId = result[0].id;
-  
-  //     console.log("New inventory ID:", newInventoryId);
-  
-  //     Alert.alert("Success", "Inventory created successfully!");
-  //     navigation.navigate("invViewer", { inventoryId: newInventoryId });
-  
-  //     setInventoryName("");
-  //     setDescription("");
-  //     setLocation("");
-  //   } catch (error) {
-  //     console.error("Insert error:", error);
-  //     Alert.alert("Error", "Failed to create inventory");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
+ 
   const fetchItems = async (inventoryId) => {
     try {
       console.log(`Fetching items for inventory ${inventoryId}`);
@@ -187,6 +147,67 @@ const InventoryViewer = ({ navigation }) => {
     await fetchItems(inventory.id);
   };
 
+  const handleEdit = (item) => {
+    navigation.navigate('EditItem', { itemId: item.id });
+  };
+
+  const handleDeleteItem = async (itemId) => {
+    Alert.alert(
+      "Delete Item",
+      "Are you sure you want to delete this item?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          onPress: async () => {
+            try {
+              await db.runAsync('DELETE FROM items WHERE id = ?', [itemId]);
+              Alert.alert("Success", "Item deleted successfully!");
+              fetchItems(selectedInventory.id); // Refresh the list
+            } catch (error) {
+              console.error("Error deleting item:", error);
+              Alert.alert("Error", "Failed to delete item.");
+            }
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  };
+
+  const handleDeleteInventory = async () => {
+    Alert.alert(
+      "Delete Inventory",
+      "Are you sure you want to delete this inventory and all its items?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          onPress: async () => {
+            try {
+              // Delete all items in the inventory first
+              await db.runAsync('DELETE FROM items WHERE inventory_id = ?', [selectedInventory.id]);
+              // Delete the inventory
+              await db.runAsync('DELETE FROM Inventory WHERE id = ?', [selectedInventory.id]);
+              Alert.alert("Success", "Inventory deleted successfully!");
+              navigation.navigate("invViewer"); // Navigate back to the inventory list
+            } catch (error) {
+              console.error("Error deleting inventory:", error);
+              Alert.alert("Error", "Failed to delete inventory.");
+            }
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  };
+
   const handleSort = (column) => {
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -197,67 +218,67 @@ const InventoryViewer = ({ navigation }) => {
     fetchItems(selectedInventory.id);
   };
 
-  const handleCreateInventory = async () => {
-    if (isLoading || !db) {
-      console.log('Early return due to:', { isLoading, hasDb: !!db });
-      return;
-    }
+  // const handleCreateInventory = async () => {
+  //   if (isLoading || !db) {
+  //     console.log('Early return due to:', { isLoading, hasDb: !!db });
+  //     return;
+  //   }
   
-    const trimmedName = inventoryName.trim();
-    console.log('Trimmed name:', trimmedName);
+  //   const trimmedName = inventoryName.trim();
+  //   console.log('Trimmed name:', trimmedName);
   
-    if (!trimmedName) {
-      Alert.alert("Error", "Inventory name is required");
-      return;
-    }
+  //   if (!trimmedName) {
+  //     Alert.alert("Error", "Inventory name is required");
+  //     return;
+  //   }
   
-    setIsLoading(true);
+  //   setIsLoading(true);
   
-    try {
-      const newInventory = {
-        name: trimmedName,
-        description: description.trim(),
-        location: location.trim()
-      };
+  //   try {
+  //     const newInventory = {
+  //       name: trimmedName,
+  //       description: description.trim(),
+  //       location: location.trim()
+  //     };
   
-      console.log('Attempting to create inventory:', newInventory);
+  //     console.log('Attempting to create inventory:', newInventory);
   
-      const createdInventory = await createInventory(db, newInventory);
-      console.log('Successfully created inventory:', createdInventory);
+  //     const createdInventory = await createInventory(db, newInventory);
+  //     console.log('Successfully created inventory:', createdInventory);
   
-      // Verify the inventory was created
-      const verifyInventory = await db.getAllAsync('SELECT * FROM Inventory WHERE id = ?', [createdInventory.id]);
-      console.log('Verification result:', verifyInventory);
+  //     // Verify the inventory was created
+  //     const verifyInventory = await db.getAllAsync('SELECT * FROM Inventory WHERE id = ?', [createdInventory.id]);
+  //     console.log('Verification result:', verifyInventory);
   
-      Alert.alert(
-        "Success",
-        "Inventory created successfully!",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              navigation.navigate("invViewer", {
-                inventoryId: createdInventory.id
-              });
-            }
-          }
-        ]
-      );
+  //     Alert.alert(
+  //       "Success",
+  //       "Inventory created successfully!",
+  //       [
+  //         {
+  //           text: "OK",
+  //           onPress: () => {
+  //             navigation.navigate("invViewer", {
+  //               inventoryId: createdInventory.id
+  //             });
+  //           }
+  //         }
+  //       ]
+  //     );
   
-      setInventoryName("");
-      setDescription("");
-      setLocation("");
+  //     setInventoryName("");
+  //     setDescription("");
+  //     setLocation("");
   
-    } catch (error) {
-      console.error("Error creating inventory:", error);
-      Alert.alert(
-        "Error", 
-        `Failed to create inventory: ${error.message}`
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error("Error creating inventory:", error);
+  //     Alert.alert(
+  //       "Error", 
+  //       `Failed to create inventory: ${error.message}`
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
 
   // HARD CODED BACKUP
@@ -425,39 +446,6 @@ const InventoryViewer = ({ navigation }) => {
     </View>
   );
 
-  const handleEdit = (item) => {
-    navigation.navigate('EditItem', { itemId: item.id });
-  };
-
-  const handleDelete = async (itemId) => {
-    Alert.alert(
-      "Delete Item",
-      "Are you sure you want to delete this item?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        { 
-          text: "Delete", 
-          onPress: async () => {
-            try {
-              await db.execAsync(
-                'DELETE FROM items WHERE id = ?',
-                [itemId]
-              );
-              fetchItems(db);
-              Alert.alert("Success", "Item deleted successfully!");
-            } catch (error) {
-              console.error("Error deleting item:", error);
-              Alert.alert("Error", "Failed to delete item.");
-            }
-          },
-          style: 'destructive'
-        }
-      ]
-    );
-  };
 
   // Add the missing renderInventoryContents function
   const renderInventoryContents = () => (
@@ -477,13 +465,13 @@ const InventoryViewer = ({ navigation }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
           <TouchableOpacity 
-            style={styles.addButton}
-            onPress={() => navigation.navigate('add', { inventoryId: selectedInventory.id })}
+            style={styles.deleteButton}
+            onPress={handleDeleteInventory}
           >
-            <FontAwesome name="plus" size={20} color="#FFF" />
+            <FontAwesome name="trash" size={20} color="#FF4444" />
           </TouchableOpacity>
         </View>
-  
+
       {items.length === 0 ? (
         <View style={styles.centerContent}>
           <Text>No items found in inventory.</Text>
@@ -503,7 +491,7 @@ const InventoryViewer = ({ navigation }) => {
         <ScrollView horizontal>
           <ScrollView style={styles.tableContainer}>
             {renderTableHeader()}
-            {items.map((item, index) => (
+            {/* {items.map((item, index) => (
               <View 
                 key={item.id} 
                 style={[
@@ -530,7 +518,35 @@ const InventoryViewer = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
               </View>
-            ))}
+            ))} */}
+            {items.map((item, index) => (
+            <View 
+              key={item.id} 
+              style={[
+                styles.tableRow,
+                index % 2 === 0 ? styles.evenRow : styles.oddRow
+              ]}
+            >
+              <Text style={styles.cell}>{item.name}</Text>
+              <Text style={styles.cell}>{item.quantity}</Text>
+              <Text style={styles.cell}>${item.price}</Text>
+              <Text style={styles.cell}>{item.category}</Text>
+              <View style={styles.actionsCell}>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => handleEdit(item)}
+                >
+                  <FontAwesome name="edit" size={20} color="#6C48C5" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => handleDeleteItem(item.id)}
+                >
+                  <FontAwesome name="trash" size={20} color="#FF4444" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
           </ScrollView>
         </ScrollView>
       )}
@@ -539,80 +555,7 @@ const InventoryViewer = ({ navigation }) => {
     </KeyboardAvoidingView>
   );
 
-  // const renderInventoryContents = () => (
-  //   <View style={styles.container}>
-  //     <View style={styles.header}>
-  //       <TouchableOpacity 
-  //         style={styles.backButton}
-  //         onPress={() => setShowInventorySelector(true)}
-  //       >
-  //         <FontAwesome name="chevron-left" size={20} color="#FFF" />
-  //       </TouchableOpacity>
-  //       <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
-  //     </View>
-
-  //     <View style={styles.searchContainer}>
-  //       <TextInput
-  //         style={styles.searchInput}
-  //         placeholder="Search items..."
-  //         value={searchQuery}
-  //         onChangeText={(text) => {
-  //           setSearchQuery(text);
-  //           fetchItems(selectedInventory.id);
-  //         }}
-  //       />
-  //       <TouchableOpacity 
-  //         style={styles.addButton}
-  //         onPress={() => navigation.navigate('AddItem', { inventory_id: selectedInventory.id })}
-  //       >
-  //         <FontAwesome name="plus" size={20} color="#FFF" />
-  //         <Text style={styles.addButtonText}>Add Item</Text>
-  //       </TouchableOpacity>
-  //     </View>
-
-  //     {items.length === 0 ? (
-  //       <View style={styles.centerContent}>
-  //         <Text>No items found in inventory.</Text>
-  //       </View>
-  //     ) : (
-  //       <ScrollView horizontal>
-  //         <ScrollView style={styles.tableContainer}>
-  //           {renderTableHeader()}
-            
-  //           {items.map((item, index) => (
-  //             <View 
-  //               key={item.id} 
-  //               style={[
-  //                 styles.tableRow,
-  //                 index % 2 === 0 ? styles.evenRow : styles.oddRow
-  //               ]}
-  //             >
-  //               <Text style={styles.cell}>{item.name}</Text>
-  //               <Text style={styles.cell}>{item.quantity}</Text>
-  //               <Text style={styles.cell}>${item.price}</Text>
-  //               <Text style={styles.cell}>{item.category}</Text>
-  //               <View style={styles.actionsCell}>
-  //                 <TouchableOpacity 
-  //                   style={styles.actionButton}
-  //                   onPress={() => handleEdit(item)}
-  //                 >
-  //                   <FontAwesome name="edit" size={20} color="#6C48C5" />
-  //                 </TouchableOpacity>
-  //                 <TouchableOpacity 
-  //                   style={styles.actionButton}
-  //                   onPress={() => handleDelete(item.id)}
-  //                 >
-  //                   <FontAwesome name="trash" size={20} color="#FF4444" />
-  //                 </TouchableOpacity>
-  //               </View>
-  //             </View>
-  //           ))}
-  //         </ScrollView>
-  //       </ScrollView>
-  //     )}
-  //   </View>
-  // );
-
+  
   // Single return statement at the end
   if (isLoading) {
     return (
@@ -627,7 +570,19 @@ const InventoryViewer = ({ navigation }) => {
 
 // Update styles to include new elements
 const styles = StyleSheet.create({
-  // ... your existing styles ...
+  deleteButton: {
+    position: 'absolute',
+    right: 20,
+    padding: 10,
+  },
+  actionsCell: {
+    flexDirection: 'row',
+    padding: 12,
+    width: 120,
+  },
+  actionButton: {
+    marginHorizontal: 8,
+  },
   backButton: {
     padding: 10,
     marginRight: 10,
