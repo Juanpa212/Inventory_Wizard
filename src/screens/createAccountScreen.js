@@ -152,7 +152,7 @@ const createAccountScreen = ({ navigation }) => {
         [
           {
             text: "OK",
-            onPress: () => navigation.navigate("StartScreen"),
+            onPress: () => navigation.navigate("login"),
           },
         ]
       );

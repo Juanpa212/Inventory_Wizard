@@ -103,3 +103,27 @@ export const deleteItem = async (db, itemId) => {
     throw error;
   }
 };
+
+export const updateItem = async (db, item) => {
+  try {
+    await db.runAsync(
+      'UPDATE items SET name = ?, quantity = ?, price = ?, category = ? WHERE id = ?',
+      [item.name, item.quantity, item.price, item.category, item.id]
+    );
+  } catch (error) {
+    console.error("Error updating item:", error);
+    throw error;
+  }
+};
+
+export const updateInventory = async (db, inventory) => {
+  try {
+    await db.runAsync(
+      'UPDATE Inventory SET name = ?, description = ?, location = ? WHERE id = ?',
+      [inventory.name, inventory.description, inventory.location, inventory.id]
+    );
+  } catch (error) {
+    console.error("Error updating inventory:", error);
+    throw error;
+  }
+};

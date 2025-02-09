@@ -165,6 +165,13 @@ const CreateInventoryScreen = ({ navigation }) => {
             >
               <Text style={styles.viewButtonText}>View All Inventories</Text>
             </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.viewButton}
+              onPress={() => navigation.navigate("inventoryManager")}
+              disabled={isLoading}
+            >
+              <Text style={styles.viewButtonText}>Manage Inventory</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>

@@ -3,7 +3,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/loginScreen";
-import InventoryEditor from "./src/screens/InventoryEditor";
 import GeneralStart from "./src/screens/generalStartScreen";
 import AddItemScreen from "./src/screens/addItemsScreen";
 import ForgottenPasswordScreen from "./src/screens/forgottenPasswordScreen";
@@ -17,6 +16,8 @@ import stockLevels from "./src/screens/stockLevels";
 import InventoryViewer from './src/screens/InventoryViewer';
 import teamViewer from './src/screens/teamViewer';
 import InventoryManagerScreen from './src/screens/inventoryManager';
+import EditInventoryScreen from './src/screens/EditInventoryScreen';
+import EditItemScreen from './src/screens/EditItemScreen';
 
 
 
@@ -60,7 +61,6 @@ function App() {
         >
           <Stack.Screen name="home" component={HomeScreen} />
           <Stack.Screen name="login" component={LoginScreen} />
-          <Stack.Screen name="editor" component={InventoryEditor} />
           <Stack.Screen name="start_1" component={GeneralStart} />
           <Stack.Screen name="add" component={AddItemScreen} />
           <Stack.Screen name="create" component={CreateAccountScreen} />
@@ -68,11 +68,13 @@ function App() {
           <Stack.Screen name="invoiceManager" component={InvoiceManager} />
           <Stack.Screen name="help" component={HelpCenter} />
           <Stack.Screen name="inventory" component={CreateInventoryScreen} />
-          <Stack.Screen name="StockLevels" component={stockLevels} />
+          <Stack.Screen name="stock" component={stockLevels} />
           <Stack.Screen name="inventoryManager" component={InventoryManagerScreen} />
           <Stack.Screen name="createInvoice" component={InvoiceCreator} />
           <Stack.Screen name="invViewer" component={InventoryViewer} />
           <Stack.Screen name="teamViewer" component={teamViewer} />
+          <Stack.Screen name="editItem" component={EditItemScreen} />
+          <Stack.Screen name="editInventory" component={EditInventoryScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

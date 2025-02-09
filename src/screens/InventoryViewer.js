@@ -147,8 +147,12 @@ const InventoryViewer = ({ navigation }) => {
     await fetchItems(inventory.id);
   };
 
-  const handleEdit = (item) => {
-    navigation.navigate('EditItem', { itemId: item.id });
+  const handleEditInventory = () => {
+    navigation.navigate("editInventory", { inventory: selectedInventory });
+  };
+  
+  const handleEditItem = (item) => {
+    navigation.navigate("editItem", { item });
   };
 
   const handleDeleteItem = async (itemId) => {
@@ -349,23 +353,21 @@ const InventoryViewer = ({ navigation }) => {
 
   
  
-  // Update your renderInventorySelector function to include the delete button
   const renderInventorySelector = () => (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Select Inventory</Text>
-      </View>
-  
-      <ScrollView style={styles.inventoryList}>
-        {inventories.length === 0 ? (
-          <View style={styles.centerContent}>
-            <Text>No inventories found.</Text>
             <TouchableOpacity 
               style={styles.createButton}
               onPress={() => navigation.navigate('inventory')}
             >
               <Text style={styles.createButtonText}>Create New Inventory</Text>
             </TouchableOpacity>
+      </View>
+      <ScrollView style={styles.inventoryList}>
+        {inventories.length === 0 ? (
+          <View style={styles.centerContent}>
+            <Text>No inventories found.</Text>
           </View>
         ) : (
           inventories.map((inventory) => (
@@ -380,14 +382,21 @@ const InventoryViewer = ({ navigation }) => {
                     {inventory.description || 'No description'}
                   </Text>
                 </View>
-                <FontAwesome name="chevron-right" size={20} color="#6C48C5" />
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.deleteButton}
-                onPress={() => handleDeleteInventory(inventory)}
-              >
-                <FontAwesome name="trash" size={20} color="#FF4444" />
-              </TouchableOpacity>
+              <View style={styles.inventoryActions}>
+                <TouchableOpacity 
+                  style={styles.editButton}
+                  onPress={() => navigation.navigate("editInventory", { inventory })}
+                >
+                  <FontAwesome name="edit" size={20} color="#6C48C5" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteInventory(inventory)}
+                >
+                  <FontAwesome name="trash" size={20} color="#FF4444" />
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
@@ -447,34 +456,39 @@ const InventoryViewer = ({ navigation }) => {
   );
 
 
-  // Add the missing renderInventoryContents function
   const renderInventoryContents = () => (
     <KeyboardAvoidingView 
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    style={styles.container}
-    keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-  >
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => setShowInventorySelector(true)}
-          >
-            <FontAwesome name="chevron-left" size={20} color="#FFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
-          <TouchableOpacity 
-            style={styles.deleteButton}
-            onPress={handleDeleteInventory}
-          >
-            <FontAwesome name="trash" size={20} color="#FF4444" />
-          </TouchableOpacity>
-        </View>
-
-      {items.length === 0 ? (
-        <View style={styles.centerContent}>
-          <Text>No items found in inventory.</Text>
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => setShowInventorySelector(true)}
+            >
+              <FontAwesome name="chevron-left" size={20} color="#FFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{selectedInventory.name}</Text>
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={styles.editButton}
+                onPress={handleEditInventory}
+              >
+                <FontAwesome name="edit" size={20} color="#FFF" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.deleteButton}
+                onPress={handleDeleteInventory}
+              >
+                <FontAwesome name="trash" size={20} color="#FF4444" />
+              </TouchableOpacity>
+            </View>
+          </View>
+  
+          {/* Add Items Button */}
           <TouchableOpacity 
             style={styles.addButton}
             onPress={() => {
@@ -483,80 +497,54 @@ const InventoryViewer = ({ navigation }) => {
                 inventoryId: parseInt(selectedInventory.id)  // Make sure it's a number
               });
             }}
->
+          >
             <Text style={styles.addButtonText}>Add Items</Text>
           </TouchableOpacity>
-        </View>
-      ) : (
-        <ScrollView horizontal>
-          <ScrollView style={styles.tableContainer}>
-            {renderTableHeader()}
-            {/* {items.map((item, index) => (
-              <View 
-                key={item.id} 
-                style={[
-                  styles.tableRow,
-                  index % 2 === 0 ? styles.evenRow : styles.oddRow
-                ]}
-              >
-                <Text style={styles.cell}>{item.name}</Text>
-                <Text style={styles.cell}>{item.quantity}</Text>
-                <Text style={styles.cell}>${item.price}</Text>
-                <Text style={styles.cell}>{item.category}</Text>
-                <View style={styles.actionsCell}>
-                  <TouchableOpacity 
-                    style={styles.actionButton}
-                    onPress={() => handleEdit(item)}
-                  >
-                    <FontAwesome name="edit" size={20} color="#6C48C5" />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.actionButton}
-                    onPress={() => handleDelete(item.id)}
-                  >
-                    <FontAwesome name="trash" size={20} color="#FF4444" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))} */}
-            {items.map((item, index) => (
-            <View 
-              key={item.id} 
-              style={[
-                styles.tableRow,
-                index % 2 === 0 ? styles.evenRow : styles.oddRow
-              ]}
-            >
-              <Text style={styles.cell}>{item.name}</Text>
-              <Text style={styles.cell}>{item.quantity}</Text>
-              <Text style={styles.cell}>${item.price}</Text>
-              <Text style={styles.cell}>{item.category}</Text>
-              <View style={styles.actionsCell}>
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => handleEdit(item)}
-                >
-                  <FontAwesome name="edit" size={20} color="#6C48C5" />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => handleDeleteItem(item.id)}
-                >
-                  <FontAwesome name="trash" size={20} color="#FF4444" />
-                </TouchableOpacity>
-              </View>
+  
+          {items.length === 0 ? (
+            <View style={styles.centerContent}>
+              <Text>No items found in inventory.</Text>
             </View>
-          ))}
-          </ScrollView>
-        </ScrollView>
-      )}
-    </View>
+          ) : (
+            <ScrollView horizontal>
+              <ScrollView style={styles.tableContainer}>
+                {renderTableHeader()}
+                {items.map((item, index) => (
+                  <View 
+                    key={item.id} 
+                    style={[
+                      styles.tableRow,
+                      index % 2 === 0 ? styles.evenRow : styles.oddRow
+                    ]}
+                  >
+                    <Text style={styles.cell}>{item.name}</Text>
+                    <Text style={styles.cell}>{item.quantity}</Text>
+                    <Text style={styles.cell}>${item.price}</Text>
+                    <Text style={styles.cell}>{item.category}</Text>
+                    <View style={styles.actionsCell}>
+                      <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => handleEditItem(item)}
+                      >
+                        <FontAwesome name="edit" size={20} color="#6C48C5" />
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => handleDeleteItem(item.id)}
+                      >
+                        <FontAwesome name="trash" size={20} color="#FF4444" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </ScrollView>
+          )}
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
-
   
-  // Single return statement at the end
   if (isLoading) {
     return (
       <View style={styles.centerContent}>
@@ -568,30 +556,8 @@ const InventoryViewer = ({ navigation }) => {
   return showInventorySelector ? renderInventorySelector() : renderInventoryContents();
 };
 
-// Update styles to include new elements
 const styles = StyleSheet.create({
-  deleteButton: {
-    position: 'absolute',
-    right: 20,
-    padding: 10,
-  },
-  actionsCell: {
-    flexDirection: 'row',
-    padding: 12,
-    width: 120,
-  },
-  actionButton: {
-    marginHorizontal: 8,
-  },
-  backButton: {
-    padding: 10,
-    marginRight: 10,
-  },
-  inventoryList: {
-    flex: 1,
-    padding: 16,
-  },
-  inventoryItem: {
+  inventoryItemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -602,113 +568,167 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EEE',
   },
-  inventoryName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  inventoryDescription: {
-    fontSize: 14,
-    color: '#666',
-  },
-  createButton: {
-    backgroundColor: '#6C48C5',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  createButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    backgroundColor: '#6C48C5',
-    padding: 20,
+  inventoryActions: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    alignItems: 'center',
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginRight: 12,
-  },
-  addButton: {
-    flexDirection: 'row',
-    backgroundColor: '#6C48C5',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  tableContainer: {
-    flex: 1,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#F0F0F0',
-    borderBottomWidth: 1,
-    borderColor: '#DDD',
-  },
-  headerCell: {
-    flexDirection: 'row',
-    padding: 12,
-    width: 120,
-    alignItems: 'center',
-  },
-  headerText: {
-    fontWeight: 'bold',
-    marginRight: 4,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderColor: '#EEE',
-  },
-  evenRow: {
-    backgroundColor: '#FFFFFF',
-  },
-  oddRow: {
-    backgroundColor: '#F9F9F9',
-  },
-  cell: {
-    padding: 12,
-    width: 120,
-  },
-  actionsCell: {
-    flexDirection: 'row',
-    padding: 12,
-    width: 120,
-  },
-  actionButton: {
-    marginHorizontal: 8,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+    header: {
+      backgroundColor: '#6C48C5',
+      padding: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    backButton: {
+      padding: 10,
+    },
+    headerTitle: {
+      color: '#FFFFFF',
+      fontSize: 24,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginHorizontal: 10,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    editButton: {
+      padding: 10,
+      marginRight: 10,
+    },
+    deleteButton: {
+      padding: 10,
+    },
+    actionsCell: {
+      flexDirection: 'row',
+      padding: 12,
+      width: 120,
+    },
+    actionButton: {
+      marginHorizontal: 8,
+    },
+    backButton: {
+      padding: 10,
+      marginRight: 10,
+    },
+    inventoryList: {
+      flex: 1,
+      padding: 16,
+    },
+    inventoryItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: '#F9F9F9',
+      borderRadius: 8,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: '#EEE',
+    },
+    inventoryName: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#333',
+      marginBottom: 4,
+    },
+    inventoryDescription: {
+      fontSize: 14,
+      color: '#666',
+    },
+    createButton: {
+      backgroundColor: '#6C48C5',
+      padding: 12,
+      borderRadius: 8,
+      marginTop: 16,
+    },
+    createButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    container: {
+      flex: 1,
+      backgroundColor: '#FFFFFF',
+    },
+    header: {
+      backgroundColor: '#6C48C5',
+      padding: 20,
+      alignItems: 'center',
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      padding: 16,
+      alignItems: 'center',
+    },
+    searchInput: {
+      flex: 1,
+      height: 40,
+      backgroundColor: '#F5F5F5',
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      marginRight: 12,
+    },
+    addButton: {
+      backgroundColor: '#6C48C5',
+      padding: 15,
+      borderRadius: 8,
+      alignItems: 'center',
+      margin: 20,
+    },
+    addButtonText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    tableContainer: {
+      flex: 1,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      backgroundColor: '#F0F0F0',
+      borderBottomWidth: 1,
+      borderColor: '#DDD',
+    },
+    headerCell: {
+      flexDirection: 'row',
+      padding: 12,
+      width: 120,
+      alignItems: 'center',
+    },
+    headerText: {
+      fontWeight: 'bold',
+      marginRight: 4,
+    },
+    tableRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderColor: '#EEE',
+    },
+    evenRow: {
+      backgroundColor: '#FFFFFF',
+    },
+    oddRow: {
+      backgroundColor: '#F9F9F9',
+    },
+    cell: {
+      padding: 12,
+      width: 120,
+    },
+    actionsCell: {
+      flexDirection: 'row',
+      padding: 12,
+      width: 120,
+    },
+    actionButton: {
+      marginHorizontal: 8,
+    },
+    centerContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 });
 
 export default InventoryViewer;

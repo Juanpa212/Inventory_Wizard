@@ -69,7 +69,7 @@ const LoginScreen = ({ navigation }) => {
 
       if (results && results.length > 0) {
         Alert.alert("Success", `Welcome, ${results[0].Username}!`);
-        navigation.navigate("editor");
+        navigation.navigate("start_1");
       } else {
         Alert.alert("Error", "Invalid email or password.");
       }
