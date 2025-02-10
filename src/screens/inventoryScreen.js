@@ -37,14 +37,9 @@ const CreateInventoryScreen = ({ navigation }) => {
   }, []);
 
   const handleCreateInventory = async () => {
-    if (isLoading || !db) {
-      console.log('Early return due to:', { isLoading, hasDb: !!db });
-      return;
-    }
+    if (isLoading || !db) return;
   
     const trimmedName = inventoryName.trim();
-    console.log('Trimmed name:', trimmedName);
-    
     if (!trimmedName) {
       Alert.alert("Error", "Inventory name is required");
       return;
@@ -53,46 +48,25 @@ const CreateInventoryScreen = ({ navigation }) => {
     setIsLoading(true);
   
     try {
-      const newInventory = {
-        name: trimmedName,
-        description: description.trim(),
-        location: location.trim()
-      };
-  
-      console.log('Attempting to create inventory:', newInventory);
-  
-      const createdInventory = await createInventory(db, newInventory);
-      console.log('Successfully created inventory:', createdInventory);
-  
-      // Verify the inventory was created
-      const verifyInventory = await db.getAllAsync('SELECT * FROM Inventory WHERE id = ?', [createdInventory.id]);
-      console.log('Verification result:', verifyInventory);
-  
-      Alert.alert(
-        "Success",
-        "Inventory created successfully!",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              navigation.navigate("invViewer", {
-                inventoryId: createdInventory.id
-              });
-            }
-          }
-        ]
+      // Insert the new inventory
+      const result = await db.runAsync(
+        'INSERT INTO Inventory (name, description, location) VALUES (?, ?, ?)',
+        [trimmedName, description.trim(), location.trim()]
       );
   
+      // Get the ID of the newly created inventory
+      const newInventoryId = result.lastInsertRowId;
+  
+      // Navigate to the InventoryManager screen with the new inventoryId
+      navigation.navigate("inventoryManager", { inventoryId: newInventoryId });
+  
+      // Clear the form
       setInventoryName("");
       setDescription("");
       setLocation("");
-  
     } catch (error) {
       console.error("Error creating inventory:", error);
-      Alert.alert(
-        "Error", 
-        `Failed to create inventory: ${error.message}`
-      );
+      Alert.alert("Error", "Failed to create inventory");
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +132,7 @@ const CreateInventoryScreen = ({ navigation }) => {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            {/* <TouchableOpacity 
               style={styles.viewButton}
               onPress={() => navigation.navigate("invViewer")}
               disabled={isLoading}
@@ -171,7 +145,7 @@ const CreateInventoryScreen = ({ navigation }) => {
               disabled={isLoading}
             >
               <Text style={styles.viewButtonText}>Manage Inventory</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
