@@ -90,7 +90,7 @@ const InventoryManagerScreen = () => {
       {/* Help Button at the Bottom */}
       <TouchableOpacity 
         style={[styles.helpButton, { backgroundColor: '#6C48C5' }]}
-        onPress={() => navigation.navigate("Help")}
+        onPress={() => navigation.navigate("help")}
       >
         <Text style={styles.buttonText}>Help</Text>
       </TouchableOpacity>

@@ -43,24 +43,32 @@ const HelpCenter = () => {
   const faqs = [
     {
       question: "How do I add items?",
-      answer: "To add items, tap the + button in the bottom right corner of the main screen. Fill in the required details like item name, quantity and category. You can also add an optional image by tapping the camera icon."
+      answer: "From your inventory's main page, select manage items and then add item. This will take you to a page where you must enter the item's name, initial quantity, price, priority and category. After that press add item and your item will be added. You can decide to add another or view your inventory"
     },
     {
-      question: "How do I add team members?",
-      answer: "Go to Settings > Team Management > Add Member. Enter their email address and select their role (Admin/Member). They will receive an invitation email to join your Inventory Wizard workspace."
+      question: "How do I delete items?",
+      answer: "From your inventory's main page, select manage items and then delete item. Then simply select all the items you wish to delete and press delete selected at the bottom."
     },
     {
-      question: "How do I generate reports?",
-      answer: "Navigate to the Reports tab, select the desired date range and report type (Inventory Summary, Stock Movement, etc.). Tap Generate to create your report. You can export it as PDF or CSV."
+      question: "How do i edit items?",
+      answer: ""
     },
     {
-      question: "How do I set low stock alerts?",
-      answer: "Open an item details, scroll to Stock Settings and set the minimum quantity. When stock falls below this level, you will receive a notification. You can manage all alerts in Settings > Notifications."
+      question: "What are invoices used for?",
+      answer: "Inventory Wizard automatically tracks any sale or restocking of items through the use of invoices. Once an invoice is created, your inventory is automatically updated depending on the information of the invoice."
     },
     {
-      question: "How do I categorize items?",
-      answer: "You can create and manage categories in Settings > Categories. When adding or editing an item, select the appropriate category from the dropdown menu. Items can belong to multiple categories."
-    }
+      question: "How do I create invoices?",
+      answer: "From your inventory's main page, select manage invoices, then press create invoice at the bottom of the screen. There you can fill out all the invoice's details like customer name, invoice number, date, ."
+    }, 
+    {
+      question: "What does 'Item Priority' mean?",
+      answer: "An item's priority defines how low an item's stock must be for it to appear in the Check Stock Levels page."
+    },
+    {
+      question: "What is the difference between Low, Medium and High item priority?",
+      answer: "An item with High priority will appear low on stock when it has fewer than 10 items, a Medimum priority item will appear with 6 or fewer items, and a Low priority item will appear with 4 or fewer items."
+    },
   ];
 
   return (
