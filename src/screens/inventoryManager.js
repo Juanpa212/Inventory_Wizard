@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as SQLite from 'expo-sqlite';
@@ -9,7 +9,7 @@ const InventoryManagerScreen = () => {
   const route = useRoute();
   const { inventoryId } = route.params; // Get the inventoryId from navigation params
 
-  const [items, setItems] = useState([]);
+  const [inventory, setInventory] = useState(null);
   const [db, setDb] = useState(null);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ const InventoryManagerScreen = () => {
       try {
         const database = await SQLite.openDatabaseAsync('MainDB.db');
         setDb(database);
-        fetchItems(database);
+        fetchInventory(database);
       } catch (error) {
         console.error("Database setup error:", error);
         Alert.alert("Error", "Failed to initialize database");
@@ -27,28 +27,44 @@ const InventoryManagerScreen = () => {
     setupDatabase();
   }, []);
 
-  const fetchItems = async (database) => {
+  const fetchInventory = async (database) => {
     try {
       const result = await database.getAllAsync(
-        'SELECT * FROM items WHERE inventory_id = ?',
+        'SELECT * FROM Inventory WHERE id = ?',
         [inventoryId]
       );
-      setItems(result || []);
+      if (result && result.length > 0) {
+        setInventory(result[0]);
+      }
     } catch (error) {
-      console.error("Error fetching items:", error);
-      Alert.alert("Error", "Failed to load items.");
+      console.error("Error fetching inventory:", error);
+      Alert.alert("Error", "Failed to load inventory details.");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Inventory</Text>
+      {/* Inventory Name and Description at the Top */}
+      <View style={styles.header}>
+        <Text style={styles.title}>{inventory ? inventory.name : "Inventory Manager"}</Text>
+        <Text style={styles.description}>
+          {inventory?.description || "No description available"}
+        </Text>
+      </View>
 
-      {/* Buttons for Managing Inventory */}
+      {/* 4-Button Grid in the Middle */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity 
           style={[styles.buttonContainer, { backgroundColor: '#6C48C5' }]}
-          onPress={() => navigation.navigate("manageItems", { inventoryId })}
+          onPress={() => navigation.navigate("invViewer", { inventoryId })}
+        >
+          <MaterialCommunityIcons name="eye" size={24} color="#FFF7F7" />
+          <Text style={styles.buttonText}>Manage Inventory</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.buttonContainer, { backgroundColor: '#6C48C5' }]}
+          onPress={() => navigation.navigate("itemManager", { inventoryId })}
         >
           <MaterialCommunityIcons name="package-variant" size={24} color="#FFF7F7" />
           <Text style={styles.buttonText}>Manage Items</Text>
@@ -69,39 +85,9 @@ const InventoryManagerScreen = () => {
           <MaterialCommunityIcons name="chart-line" size={24} color="#FFF7F7" />
           <Text style={styles.buttonText}>Check Stock Levels</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.buttonContainer, { backgroundColor: '#6C48C5' }]}
-          onPress={() => navigation.navigate("invViewer", { inventoryId })}
-        >
-          <MaterialCommunityIcons name="cog" size={24} color="#FFF7F7" />
-          <Text style={styles.buttonText}>View Inventory</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* Display Items in the Inventory */}
-      <ScrollView style={styles.itemsContainer}>
-        {items.length === 0 ? (
-          <Text style={styles.noItemsText}>No items found in this inventory.</Text>
-        ) : (
-          items.map((item, index) => (
-            <View 
-              key={item.id} 
-              style={[
-                styles.itemRow,
-                index % 2 === 0 ? styles.evenRow : styles.oddRow
-              ]}
-            >
-              <Text style={styles.itemCell}>{item.name}</Text>
-              <Text style={styles.itemCell}>{item.quantity}</Text>
-              <Text style={styles.itemCell}>${item.price}</Text>
-              <Text style={styles.itemCell}>{item.category}</Text>
-            </View>
-          ))
-        )}
-      </ScrollView>
-
-      {/* Help Button */}
+      {/* Help Button at the Bottom */}
       <TouchableOpacity 
         style={[styles.helpButton, { backgroundColor: '#6C48C5' }]}
         onPress={() => navigation.navigate("Help")}
@@ -119,28 +105,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingTop: 16,
+  },
+  header: {
+    position: 'absolute',
+    top: 50,
+    alignItems: 'center',
+    width: '100%',
   },
   title: {
     fontSize: 36,
     fontWeight: 'bold',
     color: '#6C48C5',
-    marginBottom: 24,
     textAlign: 'center',
-    position: "absolute",
-    top: 32,
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
   },
   buttonsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    marginBottom: 24,
+    alignItems: 'center',
+    marginTop: 50, // Adjust this value to center the buttons vertically
   },
   buttonContainer: {
     backgroundColor: '#007AFF',
     borderRadius: 20,
     padding: 16,
     margin: 8,
+    width: '45%', // Adjust width for a 2x2 grid
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -155,6 +151,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   helpButton: {
+    position: 'absolute',
+    bottom: 50,
     backgroundColor: '#007AFF',
     borderRadius: 20,
     paddingVertical: 12,
@@ -164,35 +162,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  itemsContainer: {
-    flex: 1,
-    width: '100%',
-    marginBottom: 20,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderColor: '#EEE',
-  },
-  evenRow: {
-    backgroundColor: '#F9F9F9',
-  },
-  oddRow: {
-    backgroundColor: '#FFFFFF',
-  },
-  itemCell: {
-    flex: 1,
-    fontSize: 16,
-  },
-  noItemsText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: '#666',
   },
 });
 

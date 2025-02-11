@@ -58,7 +58,9 @@ const EditInventoryScreen = ({ route, navigation }) => {
 
       await updateInventory(db, updatedInventory);
       Alert.alert("Success", "Inventory updated successfully!");
-      navigation.goBack();
+
+      // Navigate back to Inventory Viewer with the updated inventoryId
+      navigation.navigate("invViewer", { inventoryId: inventory.id });
     } catch (error) {
       console.error("Update error:", error);
       Alert.alert("Error", "Failed to update inventory");

@@ -18,6 +18,10 @@ import teamViewer from './src/screens/teamViewer';
 import InventoryManagerScreen from './src/screens/inventoryManager';
 import EditInventoryScreen from './src/screens/EditInventoryScreen';
 import EditItemScreen from './src/screens/EditItemScreen';
+import ItemManagerScreen from './src/screens/itemManager';
+import DeleteItemsScreen from './src/screens/deleteItem';
+import AllInventoriesScreen from './src/screens/allInvetoryScreen';
+
 
 
 
@@ -53,7 +57,7 @@ function App() {
     <SQLiteProvider databaseName="MainDB.db" onInit={migrateDbIfNeeded}>
       <NavigationContainer>
         <Stack.Navigator 
-          initialRouteName="home"
+          initialRouteName="start_1"
           screenOptions={{
             headerShown: true,
             headerTitle: "App"
@@ -75,7 +79,10 @@ function App() {
           <Stack.Screen name="teamViewer" component={teamViewer} />
           <Stack.Screen name="editItem" component={EditItemScreen} />
           <Stack.Screen name="editInventory" component={EditInventoryScreen} />
-
+          <Stack.Screen name="itemManager" component={ItemManagerScreen} />
+          <Stack.Screen name="deleteItem" component={DeleteItemsScreen} />
+          <Stack.Screen name="allInv" component={AllInventoriesScreen} />
+          
         </Stack.Navigator>
       </NavigationContainer>
     </SQLiteProvider>
