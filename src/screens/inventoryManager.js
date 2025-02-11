@@ -59,7 +59,7 @@ const InventoryManagerScreen = () => {
           onPress={() => navigation.navigate("invViewer", { inventoryId })}
         >
           <MaterialCommunityIcons name="eye" size={24} color="#FFF7F7" />
-          <Text style={styles.buttonText}>Manage Inventory</Text>
+          <Text style={styles.buttonText}>View Inventory</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -72,7 +72,7 @@ const InventoryManagerScreen = () => {
 
         <TouchableOpacity 
           style={[styles.buttonContainer, { backgroundColor: '#6C48C5' }]}
-          onPress={() => navigation.navigate("invoiceManager")}
+          onPress={() => navigation.navigate("invoiceManager", {inventoryId})}
         >
           <MaterialCommunityIcons name="file-document" size={24} color="#FFF7F7" />
           <Text style={styles.buttonText}>Manage Invoices</Text>

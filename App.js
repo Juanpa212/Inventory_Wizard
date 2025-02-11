@@ -21,6 +21,9 @@ import EditItemScreen from './src/screens/EditItemScreen';
 import ItemManagerScreen from './src/screens/itemManager';
 import DeleteItemsScreen from './src/screens/deleteItem';
 import AllInventoriesScreen from './src/screens/allInvetoryScreen';
+import DeleteInvoiceScreen from './src/screens/deleteInvoice';
+import ViewInvoiceDetails from './src/screens/InvoicelistScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -67,7 +70,7 @@ function App() {
           <Stack.Screen name="create" component={CreateAccountScreen} />
           <Stack.Screen name="forgotPassword" component={ForgottenPasswordScreen} />
           <Stack.Screen name="invoiceManager" component={InvoiceManager} />
-          <Stack.Screen name="help" component={HelpCenter} />
+          <Stack.Screen name="Help" component={HelpCenter} />
           <Stack.Screen name="inventory" component={CreateInventoryScreen} />
           <Stack.Screen name="stock" component={StockAlertsPage} />
           <Stack.Screen name="inventoryManager" component={InventoryManagerScreen} />
@@ -79,6 +82,8 @@ function App() {
           <Stack.Screen name="itemManager" component={ItemManagerScreen} />
           <Stack.Screen name="deleteItem" component={DeleteItemsScreen} />
           <Stack.Screen name="allInv" component={AllInventoriesScreen} />
+          <Stack.Screen name="invoiceDetail" component={ViewInvoiceDetails} />
+          <Stack.Screen name="deleteInvoice" component={DeleteInvoiceScreen} />
           
         </Stack.Navigator>
       </NavigationContainer>
