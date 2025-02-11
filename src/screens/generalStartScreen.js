@@ -27,9 +27,9 @@ const StartScreen = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("inventoryManager")}
+        onPress={() => navigation.navigate("allInv")}
       >
-        <Text style={styles.buttonText}>Manage Inventory</Text>
+        <Text style={styles.buttonText}>View Inventories</Text>
       </TouchableOpacity>
     </View>
   );

@@ -6,15 +6,16 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Alert,
-  ScrollView 
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback
 } from 'react-native';
-// import { FontAwesome } from '@expo/vector-icons';
-import * as SQLite from 'expo-sqlite';
+import { FontAwesome } from '@expo/vector-icons';
+import { initDatabase, createInventory } from './databaseHelper';
 
 const CreateInventoryScreen = ({ navigation }) => {
-
-  // const invExampel = {id: 1, name:"carl", description:"a guy", location:"his house"};
-
   const [inventoryName, setInventoryName] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -22,71 +23,23 @@ const CreateInventoryScreen = ({ navigation }) => {
   const [db, setDb] = useState(null);
 
   useEffect(() => {
-    initDatabase();
+    const setupDatabase = async () => {
+      try {
+        const database = await initDatabase();
+        setDb(database);
+      } catch (error) {
+        console.error("Database setup error:", error);
+        Alert.alert("Error", "Failed to initialize database");
+      }
+    };
+    
+    setupDatabase();
   }, []);
-
-  const initDatabase = async () => {
-    try {
-      const database = await SQLite.openDatabaseAsync('MainDB.db');
-      setDb(database);
-      await createTables(database);
-    } catch (error) {
-      console.error("Error opening database:", error);
-      Alert.alert(
-        "Database Error",
-        "There was an error initializing the app. Please restart the app."
-      );
-    }
-  };
-
-  const createTables = async (database) => {
-    try {
-      const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS Inventory (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL DEFAULT '',
-          description TEXT DEFAULT '',
-          location TEXT DEFAULT ''
-        )
-      `;
-      
-      await database.execAsync(createTableQuery);
-      console.log("Table creation completed");
-      
-      // Verify the table structure
-      const tableInfo = await database.execAsync("PRAGMA table_info(Inventory)");
-      console.log("Current table structure:", tableInfo);
-      
-      // Verify the table exists
-      const tableExists = await database.execAsync(`
-        SELECT name FROM sqlite_master WHERE type='table' AND name='Inventory'
-      `);
-      console.log("Table exists check:", tableExists);
-      
-    } catch (error) {
-      console.error("Error in createTables:", error);
-      Alert.alert(
-        "Database Error",
-        "There was an error initializing the app. Please restart the app."
-      );
-    }
-  };
-
-  // const validateInputs = () => {
-  //   if (!inventoryName.trim()) {
-  //     Alert.alert("Error", "Inventory name is required");
-  //     return false;
-  //   }
-  //   return true;
-  // };
 
   const handleCreateInventory = async () => {
     if (isLoading || !db) return;
   
     const trimmedName = inventoryName.trim();
-    const trimmedDescription = description.trim();
-    const trimmedLocation = location.trim();
-  
     if (!trimmedName) {
       Alert.alert("Error", "Inventory name is required");
       return;
@@ -95,121 +48,108 @@ const CreateInventoryScreen = ({ navigation }) => {
     setIsLoading(true);
   
     try {
-      // First verify table structure
-      await db.execAsync(`
-        CREATE TABLE IF NOT EXISTS Inventory (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          description TEXT,
-          location TEXT
-        )
-      `);
+      // Insert the new inventory
+      const result = await db.runAsync(
+        'INSERT INTO Inventory (name, description, location) VALUES (?, ?, ?)',
+        [trimmedName, description.trim(), location.trim()]
+      );
   
-      // Direct insert without parameters
-      const query = `
-        INSERT INTO Inventory (name, description, location) 
-        VALUES ('${trimmedName}', '${trimmedDescription}', '${trimmedLocation}')
-      `;
-      
-      await db.execAsync(query);
-      
-      // Verify the insert
-      const check = await db.execAsync('SELECT * FROM Inventory');
-      console.log("Insert verification:", check);
+      // Get the ID of the newly created inventory
+      const newInventoryId = result.lastInsertRowId;
   
-      Alert.alert("Success", "Inventory created successfully!");
-      navigation.navigate("invViewer");
+      // Navigate to the InventoryManager screen with the new inventoryId
+      navigation.navigate("inventoryManager", { inventoryId: newInventoryId });
   
+      // Clear the form
       setInventoryName("");
       setDescription("");
       setLocation("");
-  
     } catch (error) {
-      console.error("Insert error:", error);
+      console.error("Error creating inventory:", error);
       Alert.alert("Error", "Failed to create inventory");
     } finally {
       setIsLoading(false);
     }
-
-    try {
-      // Test insert
-      await db.execAsync(`
-        INSERT INTO Inventory (name, description, location)
-        VALUES ('Test1', 'Test Desc', 'Test Loc')
-      `);
-      
-      // Verify insert
-      const result = await db.execAsync('SELECT * FROM Inventory');
-      console.log("Create Screen - Data:", result);
-    } catch (error) {
-      console.error("Insert error:", error);
-    }
- 
   };
-
-
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Create New Inventory</Text>
-      </View>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView style={styles.container}>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Create New Inventory</Text>
+          </View>
 
-      <View style={styles.formContainer}>
-        <View style={styles.iconContainer}>
-          {/* <FontAwesome name="warehouse" size={50} color="#6C48C5" /> */}
-        </View>
+          <View style={styles.formContainer}>
+            <View style={styles.iconContainer}>
+              <FontAwesome name="warehouse" size={50} color="#6C48C5" />
+            </View>
 
-        <Text style={styles.label}>Inventory Name*</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter inventory name"
-          value={inventoryName}
-          onChangeText={setInventoryName}
-          editable={!isLoading}
-        />
+            <Text style={styles.label}>Inventory Name*</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter inventory name"
+              value={inventoryName}
+              onChangeText={setInventoryName}
+              editable={!isLoading}
+              maxLength={50}
+            />
 
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Enter inventory description"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-          numberOfLines={4}
-          editable={!isLoading}
-        />
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Enter inventory description"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={4}
+              editable={!isLoading}
+              maxLength={200}
+            />
 
-        <Text style={styles.label}>Location</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter inventory location"
-          value={location}
-          onChangeText={setLocation}
-          editable={!isLoading}
-        />
+            <Text style={styles.label}>Location</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter inventory location"
+              value={location}
+              onChangeText={setLocation}
+              editable={!isLoading}
+              maxLength={100}
+            />
 
-        <TouchableOpacity 
-          style={[
-            styles.createButton,
-            isLoading && styles.createButtonDisabled
-          ]} 
-          onPress={handleCreateInventory}
-          disabled={isLoading}
-        >
-          <Text style={styles.createButtonText}>
-            {isLoading ? 'Creating...' : 'Create Inventory'}
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity 
+              style={[
+                styles.createButton,
+                (isLoading || !inventoryName.trim()) && styles.createButtonDisabled
+              ]} 
+              onPress={handleCreateInventory}
+              disabled={isLoading || !inventoryName.trim()}
+            >
+              <Text style={styles.createButtonText}>
+                {isLoading ? 'Creating...' : 'Create Inventory'}
+              </Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.viewButton}
-          onPress={() => navigation.navigate("invViewer")}
-          disabled={isLoading}
-        >
-          <Text style={styles.viewButtonText}>View All Inventories</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+            {/* <TouchableOpacity 
+              style={styles.viewButton}
+              onPress={() => navigation.navigate("invViewer")}
+              disabled={isLoading}
+            >
+              <Text style={styles.viewButtonText}>View All Inventories</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.viewButton}
+              onPress={() => navigation.navigate("inventoryManager")}
+              disabled={isLoading}
+            >
+              <Text style={styles.viewButtonText}>Manage Inventory</Text>
+            </TouchableOpacity> */}
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -230,6 +170,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     padding: 20,
+    paddingBottom: 40,
   },
   iconContainer: {
     alignItems: 'center',

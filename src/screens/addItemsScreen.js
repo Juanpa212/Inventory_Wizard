@@ -6,268 +6,282 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
 import { FontAwesome } from "@expo/vector-icons";
-import * as SQLite from 'expo-sqlite';
+import { initDatabase, addItem } from './databaseHelper';
 
-import { useNavigation, useRoute } from '@react-navigation/native'; //navigation hooks
-
-const addItemScreen = () => {
-// const addItemScreen = ({ navigation }) => {
-
-  // use of hooks inside the component
-  const navigation = useNavigation();
-  const route = useRoute();
-
-  // Form state
-  const [name, setName] = useState("");
+const addItemScreen = ({ route, navigation }) => {
+  const inventoryId = route.params?.inventoryId;
+  
+  // Add all required state variables
+  const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [priority, setPriority] = useState("");
-  const [brand, setBrand] = useState("");
-  const [description, setDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [db, setDb] = useState(null);
-  const [inventoryId, setInventoryId] = useState(1);
-
-  // Dropdown data
-  const categoryData = [
-    { label: "Stickers", value: "Stickers" },
-    { label: "Books", value: "Books" },
-    { label: "Clothing", value: "Clothing" },
-  ];
-
-  const priorityData = [
-    { label: "High", value: "High" },
-    { label: "Medium", value: "Medium" },
-    { label: "Low", value: "Low" },
-  ];
-
-  const brandData = [
-    { label: "Very_OK", value: "Very_OK" },
-    { label: "Lil_Sad", value: "Lil_Sad" },
-    { label: "CyberGoth", value: "CyberGoth" },
-  ];
-
-  // getting the inventory
-  useEffect(() => {
-    if (route.params?.inventory_id) {
-      setInventoryId(route.params.inventory_id);
-    }
-  }, [route.params]);
+  const [isLoading, setIsLoading] = useState(false);  // Added isLoading state
 
   useEffect(() => {
     const setupDatabase = async () => {
       try {
-        const database = await SQLite.openDatabaseAsync('MainDB.db');
+        const database = await initDatabase();
         setDb(database);
-
-        await database.execAsync(`
-          CREATE TABLE IF NOT EXISTS items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            inventory_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            category TEXT,
-            brand TEXT,
-            price REAL,
-            priority TEXT,
-            description TEXT
-          )
-        `);
-
-        console.log("Database and table setup complete");
       } catch (error) {
         console.error("Database setup error:", error);
-        Alert.alert(
-          "Database Error",
-          "There was an error setting up the database. Please restart the app."
-        );
+        Alert.alert("Error", "Failed to initialize database");
       }
     };
 
+    // useEffect(() => {
+    //   const inventoryId = route.params?.inventoryId;
+    //   console.log('AddItemScreen mounted with params:', route.params);
+    //   console.log('Inventory ID type:', typeof inventoryId);
+    //   console.log('Inventory ID value:', inventoryId);
+    // }, [route.params]);
+    
     setupDatabase();
-
-    // Get inventory ID from navigation if available
-    const currentRoute = navigation.getState().routes.find(route => route.name === 'add');
-    if (currentRoute?.params?.inventory_id) {
-      setInventoryId(currentRoute.params.inventory_id);
-    }
   }, []);
 
+  const validateName = (name) => {
+    const trimmed = name.trim();
+    const nameRegex = /^[a-zA-Z0-9\s-]+$/;
+    if (!trimmed) return "Name is required";
+    if (!nameRegex.test(trimmed)) return "Name can only contain letters, numbers, spaces, and hyphens";
+    if (trimmed.length < 2) return "Name must be at least 2 characters long";
+    if (trimmed.length > 50) return "Name must be less than 50 characters";
+    return null;
+  };
+  
+  const validateQuantity = (quantity) => {
+    const num = parseInt(quantity);
+    if (!quantity) return "Quantity is required";
+    if (isNaN(num)) return "Quantity must be a number";
+    if (num < 0) return "Quantity cannot be negative";
+    if (num > 99999) return "Quantity must be less than 100,000";
+    return null;
+  };
+  
+  const validatePrice = (price) => {
+    const num = parseFloat(price);
+    if (!price) return "Price is required";
+    if (isNaN(num)) return "Price must be a number";
+    if (num < 0) return "Price cannot be negative";
+    if (num > 999999.99) return "Price must be less than 1,000,000";
+    if (!/^\d+(\.\d{0,2})?$/.test(price)) return "Price can only have up to 2 decimal places";
+    return null;
+  };
+  
+  const validateCategory = (category) => {
+    if (!category) return null; // Category is optional
+    const trimmed = category.trim();
+    const categoryRegex = /^[a-zA-Z\s-]+$/;
+    if (!categoryRegex.test(trimmed)) return "Category can only contain letters, spaces, and hyphens";
+    if (trimmed.length > 30) return "Category must be less than 30 characters";
+    return null;
+  };
+  
   const handleAddItem = async () => {
-    if (isLoading || !db) return;
-
-    // Validate inputs
-    if (!name.trim() || !quantity.trim() || !price.trim()) {
+    console.log('Handle add item called with:', {
+      inventoryId: route.params?.inventoryId,
+      itemName,
+      quantity,
+      price,
+      category
+    });
+  
+    if (isLoading || !db) {
+      console.log('Early return due to:', { isLoading, hasDb: !!db });
+      return;
+    }
+  
+    const inventoryId = route.params?.inventoryId;
+    if (!inventoryId) {
+      Alert.alert("Error", "No inventory selected");
+      return;
+    }
+  
+    if (!itemName.trim() || !quantity.trim() || !price.trim()) {
       Alert.alert("Error", "Please fill in all required fields");
       return;
     }
-
+  
     setIsLoading(true);
-
+  
     try {
-      const insertQuery = `
-        INSERT INTO items (inventory_id, name, quantity, category, brand, price, priority, description)
-        VALUES ("${inventoryId}", "${name.trim()}", "${quantity}", "${category}", "${brand}", "${price}", "${priority}", "${description}")
-      `;
-
-      console.log("Executing query:", insertQuery);
-      await db.execAsync(insertQuery);
-      
+      console.log('Creating new item for inventory:', inventoryId);
+  
+      const newItem = {
+        inventory_id: parseInt(inventoryId),
+        name: itemName.trim(),
+        quantity: parseInt(quantity),
+        price: parseFloat(price),
+        category: category.trim()
+      };
+  
+      console.log('Attempting to add item:', newItem);
+  
+      const result = await addItem(db, newItem);
+      console.log('Successfully added item:', result);
+  
       Alert.alert(
         "Success",
         "Item added successfully!",
         [
           {
-            text: "Add Another", 
+            text: "View Inventory",
             onPress: () => {
-              setName("");
-              setQuantity("");
-              setPrice("");
-              setCategory("");
-              setPriority("");
-              setBrand("");
-              setDescription("");
+              navigation.navigate("invViewer", {
+                inventoryId: parseInt(inventoryId)
+              });
             }
           },
           {
-            text: "View Inventory",
-            onPress: () => navigation.navigate("invViewer")  // must change to navigation to view inventory page
+            text: "Add Another",
+            onPress: () => {
+              setItemName("");
+              setQuantity("");
+              setPrice("");
+              setCategory("");
+            }
           }
         ]
       );
     } catch (error) {
-      console.error("Error adding item:", error);
-      Alert.alert(
-        "Error",
-        "Failed to add item. Please try again."
-      );
+      console.error("Insert error:", error);
+      Alert.alert("Error", `Failed to add item: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
-
+  // Add these input handlers
+  const handleQuantityChange = (text) => {
+    // Only allow numbers
+    const cleaned = text.replace(/[^0-9]/g, '');
+    setQuantity(cleaned);
+  };
+  
+  const handlePriceChange = (text) => {
+    // Allow numbers and one decimal point
+    const cleaned = text.replace(/[^0-9.]/g, '');
+    // Ensure only one decimal point
+    const parts = cleaned.split('.');
+    if (parts.length > 2) return;
+    // Limit to 2 decimal places
+    if (parts[1] && parts[1].length > 2) return;
+    setPrice(cleaned);
+  };
+  
+  const handleNameChange = (text) => {
+    // Limit length to 50 characters
+    if (text.length <= 50) {
+      setItemName(text);
+    }
+  };
+  
+  const handleCategoryChange = (text) => {
+    // Only allow letters, spaces, and hyphens
+    const cleaned = text.replace(/[^a-zA-Z\s-]/g, '');
+    if (cleaned.length <= 30) {
+      setCategory(cleaned);
+    }
+  };
   return (
-    <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Add New Item</Text>
-      </View>
-
-      <ScrollView style={styles.scrollView}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          <View style={styles.iconContainer}>
-            <FontAwesome name="plus-circle" size={50} color="#6C48C5" />
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Add New Item</Text>
           </View>
 
-          <Text style={styles.label}>
-            Name<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Enter item name" 
-            value={name}
-            onChangeText={setName}
-          />
+          <ScrollView style={styles.scrollView} bounces={false}>
+            <View style={styles.formContainer}>
+              <View style={styles.iconContainer}>
+                <FontAwesome name="plus-circle" size={50} color="#6C48C5" />
+              </View>
 
-          <Text style={styles.label}>
-            Quantity<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Enter quantity" 
-            keyboardType="numeric"
-            value={quantity}
-            onChangeText={setQuantity}
-          />
+              <Text style={styles.label}>Item Name<Text style={styles.required}>*</Text></Text>
+              <Text style={styles.helperText}>Letters and spaces only</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter item name"
+                value={itemName}
+                onChangeText={handleNameChange}
+                editable={!isLoading}
+                maxLength={25}
+              />
 
-          <Text style={styles.label}>
-            Price<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Enter price" 
-            keyboardType="numeric"
-            value={price}
-            onChangeText={setPrice}
-          />
+              <Text style={styles.label}>Quantity<Text style={styles.required}>*</Text></Text>
+              <Text style={styles.helperText}>Whole numbers only</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter quantity"
+                value={quantity}
+                onChangeText={handleQuantityChange}
+                keyboardType="numeric"
+                editable={!isLoading}
+                maxLength={5}
+              />
 
-          <Text style={styles.label}>
-            Category<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={categoryData}
-            labelField="label"
-            valueField="value"
-            placeholder="Select category"
-            value={category}
-            onChange={item => setCategory(item.value)}
-          />
+              <Text style={styles.label}>Price<Text style={styles.required}>*</Text></Text>
+              <Text style={styles.helperText}>Numbers and one decimal point only (e.g., 12.99)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter price"
+                value={price}
+                onChangeText={handlePriceChange}
+                keyboardType="decimal-pad"
+                editable={!isLoading}
+                maxLength={10}
+              />
+              <Text style={styles.label}>Category</Text>
+              <Text style={styles.helperText}>Letters and spaces only</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter category"
+                value={category}
+                onChangeText={handleCategoryChange}
+                editable={!isLoading}
+                maxLength={20}
+              />
 
-          <Text style={styles.label}>
-            Priority<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={priorityData}
-            labelField="label"
-            valueField="value"
-            placeholder="Select priority"
-            value={priority}
-            onChange={item => setPriority(item.value)}
-          />
+              <TouchableOpacity 
+                style={[
+                  styles.submitButton,
+                  (!itemName || !quantity || !price || isLoading) && styles.submitButtonDisabled
+                ]} 
+                onPress={handleAddItem}
+                disabled={!itemName || !quantity || !price || isLoading}
+              >
+                <Text style={styles.submitButtonText}>
+                  {isLoading ? 'Adding...' : 'Add Item'}
+                </Text>
+              </TouchableOpacity>
 
-          <Text style={styles.label}>
-            Brand<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={brandData}
-            labelField="label"
-            valueField="value"
-            placeholder="Select brand"
-            value={brand}
-            onChange={item => setBrand(item.value)}
-          />
-
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Enter item description..."
-            multiline
-            numberOfLines={4}
-            value={description}
-            onChangeText={setDescription}
-          />
-
-          <TouchableOpacity 
-            style={[
-              styles.button,
-              isLoading && styles.buttonDisabled
-            ]} 
-            onPress={handleAddItem}
-            disabled={isLoading}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Adding Item...' : 'Add Item'}
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={styles.requiredText}>*Required fields</Text>
+              <Text style={styles.requiredText}>* Required fields</Text>
+            </View>
+          </ScrollView>
         </View>
-      </ScrollView>
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  scrollView: {
+    flex: 1,
   },
   header: {
     backgroundColor: '#6C48C5',
@@ -279,25 +293,29 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    padding: 16,
+  formContainer: {
+    padding: 20,
+    paddingBottom: 40,
   },
   iconContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
     marginTop: 10,
     color: '#333',
   },
   required: {
     color: "#FF4444",
     marginLeft: 4,
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+    marginBottom: 4,
   },
   input: {
     backgroundColor: '#F9F9F9',
@@ -309,30 +327,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 16,
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  dropdown: {
-    backgroundColor: '#F9F9F9',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 5,
-    marginBottom: 10,
-  },
-  button: {
+  submitButton: {
     backgroundColor: '#6C48C5',
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
     marginTop: 20,
   },
-  buttonDisabled: {
+  submitButtonDisabled: {
     backgroundColor: '#9B89D9',
   },
-  buttonText: {
+  submitButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
