@@ -36,25 +36,41 @@ const StockAlertsPage = ({ navigation }) => {
   const outOfStockItems = inventoryItems.filter(item => item.stock === 0);
   const lowStockItems = inventoryItems.filter(item => isLowStock(item));
 
-  const StockItem = ({ item, type }) => (
-    <TouchableOpacity 
-      style={styles.itemButton}
-      onPress={() => console.log(`Navigate to item details for ${item.name}`)}
-    >
-      <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.priorityText}>{item.priority}</Text>
-      </View>
-      <View style={styles.stockInfo}>
-        <Text style={[
-          styles.stockText,
-          { color: type === 'out' ? '#FF4444' : '#FFA000' }
-        ]}>
-          {item.stock}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const StockItem = ({ item, type }) => {
+    // Define priority colors
+    const priorityColors = {
+      'high': '#FF4444',    // Red
+      'medium': '#FFA000',  // Yellow/Orange
+      'low': '#4CAF50'      // Green
+    };
+
+    return (
+      <TouchableOpacity 
+        style={styles.itemButton}
+        onPress={() => console.log(`Navigate to item details for ${item.name}`)}
+      >
+        <View style={styles.itemInfo}>
+          <Text style={styles.itemName}>{item.name}</Text>
+          <Text 
+            style={[
+              styles.priorityText, 
+              { color: priorityColors[item.priority] }
+            ]}
+          >
+            {item.priority}
+          </Text>
+        </View>
+        <View style={styles.stockInfo}>
+          <Text style={[
+            styles.stockText,
+            { color: type === 'out' ? '#FF4444' : '#FFA000' }
+          ]}>
+            {item.stock}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -162,7 +178,7 @@ const styles = StyleSheet.create({
   },
   priorityText: {
     fontSize: 14,
-    color: '#6C48C5',
+    fontWeight: '600',
     opacity: 0.8,
     textTransform: 'capitalize',
   },

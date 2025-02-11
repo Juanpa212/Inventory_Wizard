@@ -12,7 +12,7 @@ import InvoiceManager from './src/screens/invoiceManager';
 import { SQLiteProvider } from "expo-sqlite";
 import HelpCenter from "./src/screens/HelpCenter";
 import CreateInventoryScreen from "./src/screens/inventoryScreen";
-import stockLevels from "./src/screens/stockLevels";
+import StockLevels from "./src/screens/StockLevels";
 import InventoryViewer from './src/screens/InventoryViewer';
 import teamViewer from './src/screens/teamViewer';
 import InventoryManagerScreen from './src/screens/inventoryManager';
@@ -21,9 +21,6 @@ import EditItemScreen from './src/screens/EditItemScreen';
 import ItemManagerScreen from './src/screens/itemManager';
 import DeleteItemsScreen from './src/screens/deleteItem';
 import AllInventoriesScreen from './src/screens/allInvetoryScreen';
-
-
-
 
 const Stack = createStackNavigator();
 
