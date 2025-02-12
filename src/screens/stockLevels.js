@@ -5,13 +5,46 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications'; // Import Notifications
 import { initDatabase, getItems } from './databaseHelper';
 
 const StockAlertsPage = ({ navigation }) => {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [db, setDb] = useState(null);
+  const [notifiedItems, setNotifiedItems] = useState(new Set()); // Track notified items
+
+  // Function to send a notification
+  const sendNotification = async (title, body) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: title,
+        body: body,
+        sound: true, // Play a sound
+      },
+      trigger: { seconds: 1 }, // Show immediately
+    });
+  };
+
+  // Check for low stock items and send notifications
+  const checkLowStockAndNotify = (items) => {
+    const lowStockItems = items.filter(item => isLowStock(item));
+
+    lowStockItems.forEach(item => {
+      if (!notifiedItems.has(item.id)) {
+        // Send notification for low stock item
+        sendNotification(
+          'Low Stock Alert',
+          `${item.name} is running low (${item.quantity} remaining).`
+        );
+
+        // Add the item to the notified set
+        setNotifiedItems(prev => new Set(prev).add(item.id));
+      }
+    });
+  };
 
   useEffect(() => {
     const setupDatabase = async () => {
@@ -32,6 +65,7 @@ const StockAlertsPage = ({ navigation }) => {
     try {
       const items = await getItems(database);
       setInventoryItems(items || []);
+      checkLowStockAndNotify(items); // Check for low stock items after fetching
     } catch (error) {
       console.error("Error fetching items:", error);
       Alert.alert("Error", "Failed to load items");

@@ -53,6 +53,8 @@ async function migrateDbIfNeeded(db) {
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }
 
+
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

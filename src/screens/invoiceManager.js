@@ -1,12 +1,99 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initDatabase } from './databaseHelper';
+
+const LOW_STOCK_THRESHOLD = 10;
+const COOLDOWN_PERIOD = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
 const InvoiceManagerScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { inventoryId } = route.params || {};
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkStockLevels = async () => {
+        try {
+          // Check last notification time
+          const lastNotificationTime = await AsyncStorage.getItem('lastStockNotificationTime');
+          const currentTime = new Date().getTime();
+
+          if (lastNotificationTime) {
+            const timeSinceLastNotification = currentTime - parseInt(lastNotificationTime);
+            if (timeSinceLastNotification < COOLDOWN_PERIOD) {
+              // Skip notification if within cooldown period
+              return;
+            }
+          }
+
+          const database = await initDatabase();
+          const result = await database.getAllAsync(
+            `SELECT name, quantity FROM items 
+             WHERE inventory_id = ? AND quantity <= ?`,
+            [inventoryId, LOW_STOCK_THRESHOLD]
+          );
+
+          if (result && result.length > 0) {
+            // Group low stock items for a single notification
+            const lowStockItems = result.map(item => 
+              `${item.name} (${item.quantity} remaining)`
+            ).join('\n');
+
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: 'Low Stock Alert',
+                body: `The following items are running low:\n${lowStockItems}`,
+                priority: 'high',
+                sound: true,
+              },
+              trigger: null,
+            });
+
+            // Update last notification time
+            await AsyncStorage.setItem('lastStockNotificationTime', currentTime.toString());
+          }
+        } catch (error) {
+          console.error("Error checking stock levels:", error);
+        }
+      };
+
+      checkStockLevels();
+    }, [inventoryId])
+  );
+
+  // Function to manually check stock (optional)
+  const manualStockCheck = async () => {
+    try {
+      const database = await initDatabase();
+      const result = await database.getAllAsync(
+        `SELECT name, quantity FROM items 
+         WHERE inventory_id = ? AND quantity <= ?`,
+        [inventoryId, LOW_STOCK_THRESHOLD]
+      );
+
+      if (result && result.length > 0) {
+        const lowStockItems = result.map(item => 
+          `${item.name}: ${item.quantity} remaining`
+        );
+
+        // Show as an alert instead of notification for manual checks
+        Alert.alert(
+          'Current Low Stock Items',
+          lowStockItems.join('\n'),
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Stock Status', 'All items are above minimum stock levels.');
+      }
+    } catch (error) {
+      console.error("Error checking stock levels:", error);
+      Alert.alert('Error', 'Failed to check stock levels');
+    }
+  };
 
   if (!inventoryId) {
     return (
@@ -24,10 +111,8 @@ const InvoiceManagerScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Title at the Top */}
       <Text style={styles.title}>Invoice Manager</Text>
 
-      {/* 4-Button Grid in the Middle */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity 
           style={[styles.buttonContainer, { backgroundColor: '#6C48C5' }]}
@@ -62,7 +147,6 @@ const InvoiceManagerScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Help Button at the Bottom */}
       <TouchableOpacity 
         style={[styles.helpButton, { backgroundColor: '#6C48C5' }]}
         onPress={() => navigation.navigate("Help")}
