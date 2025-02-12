@@ -1,4 +1,4 @@
-can you spell check this message and make it easier to read
+
 
 This is the inventory wizard application a capstone project made by Juan Pabon and Andres Rodriguez
 this is an inventory managment application made for peoplee that are not too tech savvy and are starting 
