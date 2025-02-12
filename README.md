@@ -21,7 +21,7 @@ p.s: the following is a list of all the installs needed to run the application
 
 
 Navigation Related:
-npm install @react-navigation/native
+npm install @react-navigation/native 
 npm install @react-navigation/stack
 npm install react-native-screens
 npm install react-native-safe-area-context
