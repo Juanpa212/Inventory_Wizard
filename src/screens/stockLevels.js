@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,33 +7,51 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { initDatabase, getItems } from './databaseHelper';
 
 const StockAlertsPage = ({ navigation }) => {
-  // Sample data - Replace with your actual data source
-  const inventoryItems = [
-    { id: 1, name: 'Printer Paper', stock: 0, priority: 'high' },
-    { id: 2, name: 'Ink Cartridges', stock: 8, priority: 'high' },
-    { id: 3, name: 'Staplers', stock: 3, priority: 'low' },
-    { id: 4, name: 'Pencils', stock: 15, priority: 'medium' },
-    { id: 5, name: 'Notebooks', stock: 6, priority: 'medium' },
-    { id: 6, name: 'Paper Clips', stock: 2, priority: 'low' },
-    { id: 7, name: 'Folders', stock: 0, priority: 'medium' },
-  ];
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [db, setDb] = useState(null);
+
+  useEffect(() => {
+    const setupDatabase = async () => {
+      try {
+        const database = await initDatabase();
+        setDb(database);
+        fetchItems(database);
+      } catch (error) {
+        console.error("Database setup error:", error);
+        Alert.alert("Error", "Failed to initialize database");
+      }
+    };
+
+    setupDatabase();
+  }, []);
+
+  const fetchItems = async (database) => {
+    try {
+      const items = await getItems(database);
+      setInventoryItems(items || []);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      Alert.alert("Error", "Failed to load items");
+    }
+  };
 
   const isLowStock = (item) => {
     switch (item.priority) {
       case 'high':
-        return item.stock > 0 && item.stock < 10;
+        return item.quantity > 0 && item.quantity < 20;
       case 'medium':
-        return item.stock > 0 && item.stock < 7;
+        return item.quantity > 0 && item.quantity < 12;
       case 'low':
-        return item.stock > 0 && item.stock < 5;
+        return item.quantity > 0 && item.quantity < 7;
       default:
         return false;
     }
   };
 
-  const outOfStockItems = inventoryItems.filter(item => item.stock === 0);
+  const outOfStockItems = inventoryItems.filter(item => item.quantity === 0);
   const lowStockItems = inventoryItems.filter(item => isLowStock(item));
 
   const StockItem = ({ item, type }) => {
@@ -47,7 +65,7 @@ const StockAlertsPage = ({ navigation }) => {
     return (
       <TouchableOpacity 
         style={styles.itemButton}
-        onPress={() => console.log(`Navigate to item details for ${item.name}`)}
+        onPress={() => navigation.navigate('ItemDetails', { itemId: item.id })}
       >
         <View style={styles.itemInfo}>
           <Text style={styles.itemName}>{item.name}</Text>
@@ -65,7 +83,7 @@ const StockAlertsPage = ({ navigation }) => {
             styles.stockText,
             { color: type === 'out' ? '#FF4444' : '#FFA000' }
           ]}>
-            {item.stock}
+            {item.quantity}
           </Text>
         </View>
       </TouchableOpacity>

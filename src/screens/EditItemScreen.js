@@ -13,6 +13,7 @@ import {
   ScrollView,
   Modal,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker"; // Updated import
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { initDatabase, updateItem } from './databaseHelper';
@@ -31,6 +32,7 @@ const EditItemScreen = () => {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
+  const [priority, setPriority] = useState("low"); // Priority state
   const [db, setDb] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -68,6 +70,7 @@ const EditItemScreen = () => {
     setQuantity(item.quantity.toString());
     setPrice(item.price.toString());
     setCategory(item.category || "");
+    setPriority(item.priority || "low"); // Set priority
     setShowItemSelector(false);
   };
 
@@ -88,6 +91,7 @@ const EditItemScreen = () => {
         quantity: parseInt(quantity),
         price: parseFloat(price),
         category: category.trim(),
+        priority: priority, // Include priority
       };
 
       await updateItem(db, updatedItem);
@@ -131,6 +135,9 @@ const EditItemScreen = () => {
               <Text style={styles.itemButtonText}>{item.name}</Text>
               <Text style={styles.itemDetails}>
                 Qty: {item.quantity} | Price: ${item.price} | Category: {item.category || 'N/A'}
+              </Text>
+              <Text style={styles.itemDetails}>
+                Priority: {item.priority || 'N/A'}
               </Text>
             </TouchableOpacity>
           ))
@@ -194,6 +201,19 @@ const EditItemScreen = () => {
                 editable={!isLoading}
                 maxLength={20}
               />
+
+              <Text style={styles.label}>Priority</Text>
+              <View style={styles.priorityContainer}>
+                <Picker
+                  selectedValue={priority}
+                  style={styles.priorityPicker}
+                  onValueChange={(itemValue) => setPriority(itemValue)}
+                >
+                  <Picker.Item label="Low" value="low" />
+                  <Picker.Item label="Medium" value="medium" />
+                  <Picker.Item label="High" value="high" />
+                </Picker>
+              </View>
 
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
@@ -304,8 +324,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 16,
   },
-  buttonContainer: {
+  priorityContainer: {
+    backgroundColor: '#F9F9F9',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
     marginTop: 20,
+    marginBottom: 20,
+  },
+  priorityPicker: {
+    height: 50,
+    width: '100%',
+  },
+  buttonContainer: {
+    marginTop: 120,
   },
   button: {
     borderRadius: 8,

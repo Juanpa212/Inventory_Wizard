@@ -1,4 +1,5 @@
-import React from 'react';
+import * as Notifications from 'expo-notifications';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from "./src/screens/HomeScreen";
@@ -52,7 +53,42 @@ async function migrateDbIfNeeded(db) {
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+const requestNotificationPermission = async () => {
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    // Only ask if permissions have not already been determined
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    // Alert the user if permission wasn't granted
+    if (finalStatus !== 'granted') {
+      alert('You need to enable notifications to receive stock alerts.');
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error requesting notification permission:', error);
+    return false;
+  }
+};
+
 function App() {
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []); 
   return (
     <SQLiteProvider databaseName="MainDB.db" onInit={migrateDbIfNeeded}>
       <NavigationContainer>

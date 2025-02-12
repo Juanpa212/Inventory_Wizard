@@ -1,5 +1,6 @@
 // databaseHelper.js
 import * as SQLite from 'expo-sqlite';
+import * as Notifications from 'expo-notifications';
 
 export const initDatabase = async () => {
   try {
@@ -8,62 +9,177 @@ export const initDatabase = async () => {
     // Enable foreign keys
     await db.execAsync('PRAGMA foreign_keys = ON;');
 
-    // Create Inventory table
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS Inventory (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        description TEXT,
-        location TEXT
-      )
-    `);
+    // Check if the priority column exists
+    const columnInfo = await db.getAllAsync(
+      "PRAGMA table_info(items);"
+    );
 
-    // Create items table
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        inventory_id INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        quantity INTEGER NOT NULL,
-        price DECIMAL(10,2) NOT NULL,
-        category TEXT,
-        FOREIGN KEY(inventory_id) REFERENCES Inventory(id)
-      )
-    `);
+    const hasPriorityColumn = columnInfo.some(
+      (column) => column.name === 'priority'
+    );
 
-    // Create invoices table
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS invoices (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        invoice_number TEXT NOT NULL UNIQUE,
-        date TEXT NOT NULL,
-        type TEXT NOT NULL CHECK(type IN ('purchase', 'sale')),
-        total_amount DECIMAL(10,2) NOT NULL,
-        tax_amount DECIMAL(10,2) NOT NULL,
-        total_with_tax DECIMAL(10,2) NOT NULL,
-        notes TEXT
-      )
-    `);
-
-    // Create invoice_items table
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS invoice_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        invoice_id INTEGER NOT NULL,
-        item_id INTEGER NOT NULL,
-        quantity INTEGER NOT NULL,
-        price_per_unit DECIMAL(10,2) NOT NULL,
-        subtotal DECIMAL(10,2) NOT NULL,
-        FOREIGN KEY(invoice_id) REFERENCES invoices(id),
-        FOREIGN KEY(item_id) REFERENCES items(id)
-      )
-    `);
+    // Add the priority column if it doesn't exist
+    if (!hasPriorityColumn) {
+      await db.execAsync(`
+        ALTER TABLE items
+        ADD COLUMN priority TEXT CHECK(priority IN ('low', 'medium', 'high'));
+      `);
+    }
 
     return db;
   } catch (error) {
     console.error("Database initialization error:", error);
     throw error;
   }
+};
+
+// Initialize the database
+// export const initDatabase = async () => {
+//   try {
+//     const db = await SQLite.openDatabaseAsync('MainDB.db');
+
+//     // Enable foreign keys
+//     await db.execAsync('PRAGMA foreign_keys = ON;');
+
+//     // Create Inventory table
+//     await db.execAsync(`
+//       CREATE TABLE IF NOT EXISTS Inventory (
+//         id INTEGER PRIMARY KEY AUTOINCREMENT,
+//         name TEXT NOT NULL,
+//         description TEXT,
+//         location TEXT
+//       )
+//     `);
+
+//     // Create items table with priority
+//     await db.execAsync(`
+//       CREATE TABLE IF NOT EXISTS items (
+//         id INTEGER PRIMARY KEY AUTOINCREMENT,
+//         inventory_id INTEGER NOT NULL,
+//         name TEXT NOT NULL,
+//         quantity INTEGER NOT NULL,
+//         price DECIMAL(10,2) NOT NULL,
+//         category TEXT,
+//         priority TEXT CHECK(priority IN ('high', 'medium', 'low')),
+//         FOREIGN KEY(inventory_id) REFERENCES Inventory(id)
+//       )
+//     `);
+
+//     // Create invoices table
+//     await db.execAsync(`
+//       CREATE TABLE IF NOT EXISTS invoices (
+//         id INTEGER PRIMARY KEY AUTOINCREMENT,
+//         invoice_number TEXT NOT NULL UNIQUE,
+//         date TEXT NOT NULL,
+//         type TEXT NOT NULL CHECK(type IN ('purchase', 'sale')),
+//         total_amount DECIMAL(10,2) NOT NULL,
+//         tax_amount DECIMAL(10,2) NOT NULL,
+//         total_with_tax DECIMAL(10,2) NOT NULL,
+//         notes TEXT
+//       )
+//     `);
+
+//     // Create invoice_items table
+//     await db.execAsync(`
+//       CREATE TABLE IF NOT EXISTS invoice_items (
+//         id INTEGER PRIMARY KEY AUTOINCREMENT,
+//         invoice_id INTEGER NOT NULL,
+//         item_id INTEGER NOT NULL,
+//         quantity INTEGER NOT NULL,
+//         price_per_unit DECIMAL(10,2) NOT NULL,
+//         subtotal DECIMAL(10,2) NOT NULL,
+//         FOREIGN KEY(invoice_id) REFERENCES invoices(id),
+//         FOREIGN KEY(item_id) REFERENCES items(id)
+//       )
+//     `);
+
+//     return db;
+//   } catch (error) {
+//     console.error("Database initialization error:", error);
+//     throw error;
+//   }
+// };
+
+// Add an item to the database
+export const addItem = async (db, item) => {
+  try {
+    const { inventory_id, name, quantity, price, category, priority } = item;
+
+    // Ensure the inventory_id is not null or undefined
+    if (!inventory_id) {
+      throw new Error("Inventory ID is required");
+    }
+
+    // Insert the item into the database
+    const result = await db.runAsync(
+      'INSERT INTO items (inventory_id, name, quantity, price, category, priority) VALUES (?, ?, ?, ?, ?, ?)',
+      [inventory_id, name, quantity, price, category, priority]
+    );
+
+    // Check stock levels after adding the item
+    await checkStockLevels(db);
+
+    // Return the newly created item ID
+    return { id: result.lastInsertRowId, ...item };
+  } catch (error) {
+    console.error("Error in addItem:", error);
+    throw error;
+  }
+};
+
+// Fetch all items from the database
+export const getItems = async (db) => {
+  try {
+    return await db.getAllAsync('SELECT * FROM items');
+  } catch (error) {
+    console.error("Error fetching items:", error);
+    throw error;
+  }
+};
+
+// Check stock levels and send notifications
+export const checkStockLevels = async (db) => {
+  try {
+    const items = await db.getAllAsync('SELECT * FROM items');
+
+    for (const item of items) {
+      let threshold = 0;
+      switch (item.priority) {
+        case 'high':
+          threshold = 20;
+          break;
+        case 'medium':
+          threshold = 12;
+          break;
+        case 'low':
+          threshold = 7;
+          break;
+        default:
+          threshold = 0;
+      }
+
+      if (item.quantity < threshold) {
+        await sendNotification(
+          `Low Stock Alert: ${item.name}`,
+          `The stock level for ${item.name} is below ${threshold}. Current stock: ${item.quantity}`
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error checking stock levels:", error);
+    throw error;
+  }
+};
+
+// Send a notification
+const sendNotification = async (title, body) => {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title,
+      body,
+    },
+    trigger: null, // Send immediately
+  });
 };
 
 export const createInventory = async (db, inventory) => {
@@ -98,28 +214,28 @@ export const createInventory = async (db, inventory) => {
   }
 };
 
-export const addItem = async (db, item) => {
-  try {
-    const { inventory_id, name, quantity, price, category } = item;
+// export const addItem = async (db, item) => {
+//   try {
+//     const { inventory_id, name, quantity, price, category } = item;
 
-    // Ensure the inventory_id is not null or undefined
-    if (!inventory_id) {
-      throw new Error("Inventory ID is required");
-    }
+//     // Ensure the inventory_id is not null or undefined
+//     if (!inventory_id) {
+//       throw new Error("Inventory ID is required");
+//     }
 
-    // Insert the item into the database
-    const result = await db.runAsync(
-      'INSERT INTO items (inventory_id, name, quantity, price, category) VALUES (?, ?, ?, ?, ?)',
-      [inventory_id, name, quantity, price, category]
-    );
+//     // Insert the item into the database
+//     const result = await db.runAsync(
+//       'INSERT INTO items (inventory_id, name, quantity, price, category) VALUES (?, ?, ?, ?, ?)',
+//       [inventory_id, name, quantity, price, category]
+//     );
 
-    // Return the newly created item ID
-    return { id: result.lastInsertRowId, ...item };
-  } catch (error) {
-    console.error("Error in addItem:", error);
-    throw error;
-  }
-};
+//     // Return the newly created item ID
+//     return { id: result.lastInsertRowId, ...item };
+//   } catch (error) {
+//     console.error("Error in addItem:", error);
+//     throw error;
+//   }
+// };
 
 export const deleteItem = async (db, itemId) => {
   try {
@@ -133,8 +249,8 @@ export const deleteItem = async (db, itemId) => {
 export const updateItem = async (db, item) => {
   try {
     await db.runAsync(
-      'UPDATE items SET name = ?, quantity = ?, price = ?, category = ? WHERE id = ?',
-      [item.name, item.quantity, item.price, item.category, item.id]
+      'UPDATE items SET name = ?, quantity = ?, price = ?, category = ?, priority = ? WHERE id = ?',
+      [item.name, item.quantity, item.price, item.category, item.priority, item.id]
     );
   } catch (error) {
     console.error("Error updating item:", error);
