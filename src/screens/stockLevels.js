@@ -1,39 +1,91 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications'; // Import Notifications
+import { initDatabase, getItems } from './databaseHelper';
 
 const StockAlertsPage = ({ navigation }) => {
-  // Sample data - Replace with your actual data source
-  const inventoryItems = [
-    { id: 1, name: 'Printer Paper', stock: 0, priority: 'high' },
-    { id: 2, name: 'Ink Cartridges', stock: 8, priority: 'high' },
-    { id: 3, name: 'Staplers', stock: 3, priority: 'low' },
-    { id: 4, name: 'Pencils', stock: 15, priority: 'medium' },
-    { id: 5, name: 'Notebooks', stock: 6, priority: 'medium' },
-    { id: 6, name: 'Paper Clips', stock: 2, priority: 'low' },
-    { id: 7, name: 'Folders', stock: 0, priority: 'medium' },
-  ];
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [db, setDb] = useState(null);
+  const [notifiedItems, setNotifiedItems] = useState(new Set()); // Track notified items
+
+  // Function to send a notification
+  const sendNotification = async (title, body) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: title,
+        body: body,
+        sound: true, // Play a sound
+      },
+      trigger: { seconds: 1 }, // Show immediately
+    });
+  };
+
+  // Check for low stock items and send notifications
+  const checkLowStockAndNotify = (items) => {
+    const lowStockItems = items.filter(item => isLowStock(item));
+
+    lowStockItems.forEach(item => {
+      if (!notifiedItems.has(item.id)) {
+        // Send notification for low stock item
+        sendNotification(
+          'Low Stock Alert',
+          `${item.name} is running low (${item.quantity} remaining).`
+        );
+
+        // Add the item to the notified set
+        setNotifiedItems(prev => new Set(prev).add(item.id));
+      }
+    });
+  };
+
+  useEffect(() => {
+    const setupDatabase = async () => {
+      try {
+        const database = await initDatabase();
+        setDb(database);
+        fetchItems(database);
+      } catch (error) {
+        console.error("Database setup error:", error);
+        Alert.alert("Error", "Failed to initialize database");
+      }
+    };
+
+    setupDatabase();
+  }, []);
+
+  const fetchItems = async (database) => {
+    try {
+      const items = await getItems(database);
+      setInventoryItems(items || []);
+      checkLowStockAndNotify(items); // Check for low stock items after fetching
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      Alert.alert("Error", "Failed to load items");
+    }
+  };
 
   const isLowStock = (item) => {
     switch (item.priority) {
       case 'high':
-        return item.stock > 0 && item.stock < 10;
+        return item.quantity > 0 && item.quantity < 20;
       case 'medium':
-        return item.stock > 0 && item.stock < 7;
+        return item.quantity > 0 && item.quantity < 12;
       case 'low':
-        return item.stock > 0 && item.stock < 5;
+        return item.quantity > 0 && item.quantity < 7;
       default:
         return false;
     }
   };
 
-  const outOfStockItems = inventoryItems.filter(item => item.stock === 0);
+  const outOfStockItems = inventoryItems.filter(item => item.quantity === 0);
   const lowStockItems = inventoryItems.filter(item => isLowStock(item));
 
   const StockItem = ({ item, type }) => {
@@ -47,7 +99,7 @@ const StockAlertsPage = ({ navigation }) => {
     return (
       <TouchableOpacity 
         style={styles.itemButton}
-        onPress={() => console.log(`Navigate to item details for ${item.name}`)}
+        onPress={() => navigation.navigate('ItemDetails', { itemId: item.id })}
       >
         <View style={styles.itemInfo}>
           <Text style={styles.itemName}>{item.name}</Text>
@@ -65,7 +117,7 @@ const StockAlertsPage = ({ navigation }) => {
             styles.stockText,
             { color: type === 'out' ? '#FF4444' : '#FFA000' }
           ]}>
-            {item.stock}
+            {item.quantity}
           </Text>
         </View>
       </TouchableOpacity>

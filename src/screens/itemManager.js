@@ -43,10 +43,10 @@ const ItemManagerScreen = () => {
 
         <TouchableOpacity 
           style={[styles.buttonContainer, { backgroundColor: '#6C48C5' }]}
-          onPress={() => navigation.navigate("invViewer", { inventoryId })}
+          onPress={() => navigation.navigate("inventoryManager", { inventoryId })}
         >
           <MaterialCommunityIcons name="eye" size={24} color="#FFF7F7" />
-          <Text style={styles.buttonText}>View Inventory</Text>
+          <Text style={styles.buttonText}>Manage Inventory</Text>
         </TouchableOpacity>
       </View>
 
