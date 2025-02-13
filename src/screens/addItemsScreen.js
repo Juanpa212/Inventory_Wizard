@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Picker,
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { initDatabase, addItem } from './databaseHelper';
+import { Picker } from "@react-native-picker/picker";
+import { initDatabase, addItem, createDefaultInventory, checkInventoryExists } from './databaseHelper';
 
 const AddItemScreen = () => {
   const navigation = useNavigation();
@@ -18,17 +18,58 @@ const AddItemScreen = () => {
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
   const [priority, setPriority] = useState('low'); // Default priority
+  const [inventoryId, setInventoryId] = useState(null); // Dynamic inventory ID
+
+  // Initialize database and fetch/create inventory
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        const db = await initDatabase();
+
+        // Check if an inventory exists
+        const inventoryExists = await checkInventoryExists(db, 1); // Check for inventory with ID 1
+        if (!inventoryExists) {
+          // Create a default inventory if none exists
+          const defaultInventoryId = await createDefaultInventory(db);
+          setInventoryId(defaultInventoryId);
+        } else {
+          setInventoryId(1); // Use the existing inventory ID
+        }
+      } catch (error) {
+        console.error("Error initializing database:", error);
+        Alert.alert("Error", "Failed to initialize database");
+      }
+    };
+
+    initialize();
+  }, []);
 
   const handleAddItem = async () => {
-    if (!name.trim() || !quantity || !price) {
-      Alert.alert("Error", "Please fill in all required fields");
+    // Input validation
+    if (!name.trim()) {
+      Alert.alert("Error", "Item name is required");
+      return;
+    }
+
+    if (!quantity || isNaN(quantity) || parseInt(quantity) <= 0) {
+      Alert.alert("Error", "Quantity must be a valid number greater than 0");
+      return;
+    }
+
+    if (!price || isNaN(price) || parseFloat(price) <= 0) {
+      Alert.alert("Error", "Price must be a valid number greater than 0");
+      return;
+    }
+
+    if (!inventoryId) {
+      Alert.alert("Error", "Inventory not found. Please try again.");
       return;
     }
 
     try {
       const db = await initDatabase();
       await addItem(db, {
-        inventory_id: 1, // Replace with actual inventory ID
+        inventory_id: inventoryId, // Use dynamic inventory ID
         name,
         quantity: parseInt(quantity),
         price: parseFloat(price),

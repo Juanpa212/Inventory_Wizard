@@ -2,29 +2,66 @@
 import * as SQLite from 'expo-sqlite';
 import * as Notifications from 'expo-notifications';
 
+
+
 export const initDatabase = async () => {
   try {
     const db = await SQLite.openDatabaseAsync('MainDB.db');
 
     // Enable foreign keys
     await db.execAsync('PRAGMA foreign_keys = ON;');
+    
+    // Create Inventory table
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS Inventory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        location TEXT
+      )
+    `);
 
-    // Check if the priority column exists
-    const columnInfo = await db.getAllAsync(
-      "PRAGMA table_info(items);"
-    );
+    // Create items table with priority
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        inventory_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        category TEXT,
+        priority TEXT CHECK(priority IN ('high', 'medium', 'low')),
+        FOREIGN KEY(inventory_id) REFERENCES Inventory(id)
+      )
+    `);
 
-    const hasPriorityColumn = columnInfo.some(
-      (column) => column.name === 'priority'
-    );
+    // Create invoices table
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_number TEXT NOT NULL UNIQUE,
+        date TEXT NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('purchase', 'sale')),
+        total_amount DECIMAL(10,2) NOT NULL,
+        tax_amount DECIMAL(10,2) NOT NULL,
+        total_with_tax DECIMAL(10,2) NOT NULL,
+        notes TEXT
+      )
+    `);
 
-    // Add the priority column if it doesn't exist
-    if (!hasPriorityColumn) {
-      await db.execAsync(`
-        ALTER TABLE items
-        ADD COLUMN priority TEXT CHECK(priority IN ('low', 'medium', 'high'));
-      `);
-    }
+    // Create invoice_items table
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS invoice_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_id INTEGER NOT NULL,
+        item_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        price_per_unit DECIMAL(10,2) NOT NULL,
+        subtotal DECIMAL(10,2) NOT NULL,
+        FOREIGN KEY(invoice_id) REFERENCES invoices(id),
+        FOREIGN KEY(item_id) REFERENCES items(id)
+      )
+    `);
 
     return db;
   } catch (error) {
@@ -32,73 +69,6 @@ export const initDatabase = async () => {
     throw error;
   }
 };
-
-// Initialize the database
-// export const initDatabase = async () => {
-//   try {
-//     const db = await SQLite.openDatabaseAsync('MainDB.db');
-
-//     // Enable foreign keys
-//     await db.execAsync('PRAGMA foreign_keys = ON;');
-
-//     // Create Inventory table
-//     await db.execAsync(`
-//       CREATE TABLE IF NOT EXISTS Inventory (
-//         id INTEGER PRIMARY KEY AUTOINCREMENT,
-//         name TEXT NOT NULL,
-//         description TEXT,
-//         location TEXT
-//       )
-//     `);
-
-//     // Create items table with priority
-//     await db.execAsync(`
-//       CREATE TABLE IF NOT EXISTS items (
-//         id INTEGER PRIMARY KEY AUTOINCREMENT,
-//         inventory_id INTEGER NOT NULL,
-//         name TEXT NOT NULL,
-//         quantity INTEGER NOT NULL,
-//         price DECIMAL(10,2) NOT NULL,
-//         category TEXT,
-//         priority TEXT CHECK(priority IN ('high', 'medium', 'low')),
-//         FOREIGN KEY(inventory_id) REFERENCES Inventory(id)
-//       )
-//     `);
-
-//     // Create invoices table
-//     await db.execAsync(`
-//       CREATE TABLE IF NOT EXISTS invoices (
-//         id INTEGER PRIMARY KEY AUTOINCREMENT,
-//         invoice_number TEXT NOT NULL UNIQUE,
-//         date TEXT NOT NULL,
-//         type TEXT NOT NULL CHECK(type IN ('purchase', 'sale')),
-//         total_amount DECIMAL(10,2) NOT NULL,
-//         tax_amount DECIMAL(10,2) NOT NULL,
-//         total_with_tax DECIMAL(10,2) NOT NULL,
-//         notes TEXT
-//       )
-//     `);
-
-//     // Create invoice_items table
-//     await db.execAsync(`
-//       CREATE TABLE IF NOT EXISTS invoice_items (
-//         id INTEGER PRIMARY KEY AUTOINCREMENT,
-//         invoice_id INTEGER NOT NULL,
-//         item_id INTEGER NOT NULL,
-//         quantity INTEGER NOT NULL,
-//         price_per_unit DECIMAL(10,2) NOT NULL,
-//         subtotal DECIMAL(10,2) NOT NULL,
-//         FOREIGN KEY(invoice_id) REFERENCES invoices(id),
-//         FOREIGN KEY(item_id) REFERENCES items(id)
-//       )
-//     `);
-
-//     return db;
-//   } catch (error) {
-//     console.error("Database initialization error:", error);
-//     throw error;
-//   }
-// };
 
 // Add an item to the database
 export const addItem = async (db, item) => {
@@ -108,6 +78,12 @@ export const addItem = async (db, item) => {
     // Ensure the inventory_id is not null or undefined
     if (!inventory_id) {
       throw new Error("Inventory ID is required");
+    }
+
+    // Check if the inventory exists
+    const inventoryExists = await checkInventoryExists(db, inventory_id);
+    if (!inventoryExists) {
+      throw new Error(`Inventory with ID ${inventory_id} does not exist.`);
     }
 
     // Insert the item into the database
@@ -389,6 +365,39 @@ export const getInvoiceDetails = async (db, invoiceId) => {
     };
   } catch (error) {
     console.error("Error fetching invoice details:", error);
+    throw error;
+  }
+};
+
+export const checkInventoryExists = async (db, inventoryId) => {
+  try {
+    const result = await db.getAllAsync(
+      'SELECT id FROM Inventory WHERE id = ?',
+      [inventoryId]
+    );
+    return result.length > 0; // Returns true if the inventory exists
+  } catch (error) {
+    console.error("Error checking inventory:", error);
+    throw error;
+  }
+};
+
+export const createDefaultInventory = async (db) => {
+  try {
+    const defaultInventory = {
+      name: 'Default Inventory',
+      description: 'Default inventory for testing',
+      location: 'Warehouse A',
+    };
+
+    const result = await db.runAsync(
+      'INSERT INTO Inventory (name, description, location) VALUES (?, ?, ?)',
+      [defaultInventory.name, defaultInventory.description, defaultInventory.location]
+    );
+
+    return result.lastInsertRowId; // Return the ID of the newly created inventory
+  } catch (error) {
+    console.error("Error creating default inventory:", error);
     throw error;
   }
 };
