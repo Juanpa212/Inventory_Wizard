@@ -50,10 +50,6 @@ const HelpCenter = () => {
       answer: "From your inventory's main page, select manage items and then delete item. Then simply select all the items you wish to delete and press delete selected at the bottom."
     },
     {
-      question: "How do i edit items?",
-      answer: ""
-    },
-    {
       question: "What are invoices used for?",
       answer: "Inventory Wizard automatically tracks any sale or restocking of items through the use of invoices. Once an invoice is created, your inventory is automatically updated depending on the information of the invoice."
     },
