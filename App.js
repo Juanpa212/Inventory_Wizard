@@ -95,7 +95,7 @@ function App() {
     <SQLiteProvider databaseName="MainDB.db" onInit={migrateDbIfNeeded}>
       <NavigationContainer>
         <Stack.Navigator 
-          initialRouteName="start_1"
+          initialRouteName="login"
           screenOptions={{
             headerShown: true,
             headerTitle: "App"
@@ -108,7 +108,7 @@ function App() {
           <Stack.Screen name="create" component={CreateAccountScreen} />
           <Stack.Screen name="forgotPassword" component={ForgottenPasswordScreen} />
           <Stack.Screen name="invoiceManager" component={InvoiceManager} />
-          <Stack.Screen name="Help" component={HelpCenter} />
+          <Stack.Screen name="help" component={HelpCenter} />
           <Stack.Screen name="inventory" component={CreateInventoryScreen} />
           <Stack.Screen name="stock" component={StockAlertsPage} />
           <Stack.Screen name="inventoryManager" component={InventoryManagerScreen} />
