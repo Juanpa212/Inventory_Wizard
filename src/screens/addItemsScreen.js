@@ -20,8 +20,19 @@ const AddItemScreen = () => {
   const [priority, setPriority] = useState('low'); // Default priority
 
   const handleAddItem = async () => {
-    if (!name.trim() || !quantity || !price) {
-      Alert.alert("Error", "Please fill in all required fields");
+    // Input validation
+    if (!name.trim()) {
+      Alert.alert("Error", "Item name is required");
+      return;
+    }
+
+    if (!quantity || isNaN(quantity) || parseInt(quantity) <= 0) {
+      Alert.alert("Error", "Quantity must be a valid number greater than 0");
+      return;
+    }
+
+    if (!price || isNaN(price) || parseFloat(price) <= 0) {
+      Alert.alert("Error", "Price must be a valid number greater than 0");
       return;
     }
 
