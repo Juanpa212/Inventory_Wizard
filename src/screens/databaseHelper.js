@@ -502,3 +502,14 @@ export const getInventoryId = async (db) => {
     throw error;
   }
 };
+
+export const getAllInventories = async (db) => {
+  try {
+    const inventories = await db.getAllAsync('SELECT * FROM Inventory');
+    console.log("Fetched inventories:", inventories);
+    return inventories;
+  } catch (error) {
+    console.error("Error fetching inventories:", error);
+    throw error;
+  }
+};

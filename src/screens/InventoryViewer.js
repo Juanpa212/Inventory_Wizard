@@ -21,20 +21,6 @@ const ViewInventoryScreen = ({ route }) => {
     fetchItems();
   }, [inventoryId]); // Fetch items when inventoryId changes
 
-  // Get priority color based on priority level
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return '#FF4444'; // Red for high priority
-      case 'medium':
-        return '#FFD700'; // Yellow for medium priority
-      case 'low':
-        return '#4CAF50'; // Green for low priority
-      default:
-        return '#333'; // Default color
-    }
-  };
-
   // Render table header
   const renderTableHeader = () => (
     <View style={styles.tableHeader}>
@@ -53,15 +39,7 @@ const ViewInventoryScreen = ({ route }) => {
       <Text style={[styles.cellText, styles.columnQuantity]}>{item.quantity}</Text>
       <Text style={[styles.cellText, styles.columnPrice]}>${item.price.toFixed(2)}</Text>
       <Text style={[styles.cellText, styles.columnCategory]}>{item.category}</Text>
-      <Text
-        style={[
-          styles.cellText,
-          styles.columnPriority,
-          { color: getPriorityColor(item.priority) },
-        ]}
-      >
-        {item.priority}
-      </Text>
+      <Text style={[styles.cellText, styles.columnPriority]}>{item.priority}</Text>
     </View>
   );
 
@@ -131,7 +109,7 @@ const styles = StyleSheet.create({
   columnPriority: {
     flex: 1,
     textAlign: 'center',
-    fontWeight: 'bold', // Make priority text bold
+    // Make priority text bold
   },
 });
 

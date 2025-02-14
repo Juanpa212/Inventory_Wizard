@@ -1,67 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import * as SQLite from 'expo-sqlite';
+import { initDatabase, getAllInventories, deleteInventory } from './databaseHelper';
 
 const AllInventoriesScreen = () => {
   const navigation = useNavigation();
   const [inventories, setInventories] = useState([]);
-  const [db, setDb] = useState(null);
 
-  useEffect(() => {
-    const setupDatabase = async () => {
-      try {
-        const database = await SQLite.openDatabaseAsync('MainDB.db');
-        setDb(database);
-        fetchInventories(database);
-      } catch (error) {
-        console.error("Database setup error:", error);
-        Alert.alert("Error", "Failed to initialize database");
-      }
-    };
-
-    setupDatabase();
-  }, []);
-
-  const fetchInventories = async (database) => {
+  // Fetch all inventories
+  const fetchInventories = async () => {
     try {
-      const result = await database.getAllAsync('SELECT * FROM Inventory');
-      setInventories(result || []);
+      const db = await initDatabase();
+      const fetchedInventories = await getAllInventories(db);
+      setInventories(fetchedInventories);
     } catch (error) {
       console.error("Error fetching inventories:", error);
-      Alert.alert("Error", "Failed to load inventories.");
+      Alert.alert("Error", "Failed to fetch inventories");
     }
   };
 
-  const handleInventoryPress = (inventoryId) => {
-    navigation.navigate("inventoryManager", { inventoryId });
+  useEffect(() => {
+    fetchInventories();
+  }, []);
+
+  // Handle inventory deletion
+  const handleDeleteInventory = async (inventoryId) => {
+    try {
+      const db = await initDatabase();
+      await deleteInventory(db, inventoryId);
+      Alert.alert("Success", "Inventory deleted successfully", [
+        {
+          text: "OK",
+          onPress: () => fetchInventories(), // Refresh the list after deletion
+        },
+      ]);
+    } catch (error) {
+      console.error("Error deleting inventory:", error);
+      Alert.alert("Error", "Failed to delete inventory");
+    }
   };
+
+  // Render each inventory item
+  const renderInventoryItem = ({ item }) => (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('inventoryManager', { inventoryId: item.id })}
+    >
+      <View style={styles.inventoryItem}>
+        <Text style={styles.inventoryName}>{item.name}</Text>
+        <Text style={styles.inventoryDescription}>{item.description}</Text>
+        <Text style={styles.inventoryLocation}>{item.location}</Text>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteInventory(item.id)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>All Inventories</Text>
-
-      {/* List of Inventories */}
-      <ScrollView style={styles.inventoriesContainer}>
-        {inventories.length === 0 ? (
-          <Text style={styles.noInventoriesText}>No inventories found.</Text>
-        ) : (
-          inventories.map((inventory) => (
-            <TouchableOpacity
-              key={inventory.id}
-              style={styles.inventoryItem}
-              onPress={() => handleInventoryPress(inventory.id)}
-            >
-              <Text style={styles.inventoryName}>{inventory.name}</Text>
-              <Text style={styles.inventoryDescription}>
-                {inventory.description || "No description"}
-              </Text>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#6C48C5" />
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+      <FlatList
+        data={inventories}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderInventoryItem}
+      />
     </View>
   );
 };
@@ -76,18 +88,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#6C48C5',
-    textAlign: 'center',
     marginBottom: 16,
   },
-  inventoriesContainer: {
-    flex: 1,
-  },
   inventoryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     padding: 16,
-    backgroundColor: '#F9F9F9',
     borderRadius: 8,
     marginBottom: 12,
     borderWidth: 1,
@@ -97,16 +102,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+    marginBottom: 8,
   },
   inventoryDescription: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 4,
   },
-  noInventoriesText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
+  inventoryLocation: {
+    fontSize: 14,
     color: '#666',
+    marginBottom: 8,
+  },
+  deleteButton: {
+    backgroundColor: '#FF4444',
+    padding: 8,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
