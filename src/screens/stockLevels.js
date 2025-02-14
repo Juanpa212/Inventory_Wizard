@@ -99,7 +99,7 @@ const StockAlertsPage = ({ navigation }) => {
     return (
       <TouchableOpacity 
         style={styles.itemButton}
-        onPress={() => navigation.navigate('ItemDetails', { itemId: item.id })}
+
       >
         <View style={styles.itemInfo}>
           <Text style={styles.itemName}>{item.name}</Text>

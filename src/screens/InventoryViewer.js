@@ -1,91 +1,81 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-} from 'react-native';
-import { useRoute } from '@react-navigation/native'; // Import useRoute
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { initDatabase, getItems } from './databaseHelper';
 
-const ViewInventoryScreen = () => {
-  const route = useRoute(); // Get the route object
-  const { inventoryId } = route.params; // Extract inventoryId from route params
+const ViewInventoryScreen = ({ route }) => {
+  const { inventoryId } = route.params; // Get inventoryId from navigation params
   const [items, setItems] = useState([]);
-  const [db, setDb] = useState(null);
 
-  useEffect(() => {
-    const setupDatabase = async () => {
-      try {
-        const database = await initDatabase();
-        setDb(database);
-        fetchItems(database);
-      } catch (error) {
-        console.error("Database setup error:", error);
-        Alert.alert("Error", "Failed to initialize database");
-      }
-    };
-
-    setupDatabase();
-  }, []);
-
-  const fetchItems = async (database) => {
+  // Fetch items for the current inventory
+  const fetchItems = async () => {
     try {
-      // Fetch items only for the current inventory
-      const result = await database.getAllAsync(
-        'SELECT * FROM items WHERE inventory_id = ?',
-        [inventoryId]
-      );
-      setItems(result || []);
+      const db = await initDatabase();
+      const fetchedItems = await getItems(db, inventoryId);
+      setItems(fetchedItems);
     } catch (error) {
       console.error("Error fetching items:", error);
-      Alert.alert("Error", "Failed to load items");
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Inventory</Text>
+  useEffect(() => {
+    fetchItems();
+  }, [inventoryId]); // Fetch items when inventoryId changes
 
-      <ScrollView style={styles.scrollView}>
-        {/* Table Header */}
-        <View style={styles.tableHeader}>
-          <Text style={[styles.headerText, styles.itemHeader]}>Items</Text>
-          <Text style={[styles.headerText, styles.quantityHeader]}>Quantity</Text>
-          <Text style={[styles.headerText, styles.priceHeader]}>Price</Text>
-          <Text style={[styles.headerText, styles.categoryHeader]}>Category</Text>
-          <Text style={[styles.headerText, styles.priorityHeader]}>Priority</Text>
-        </View>
+  // Get priority color based on priority level
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high':
+        return '#FF4444'; // Red for high priority
+      case 'medium':
+        return '#FFD700'; // Yellow for medium priority
+      case 'low':
+        return '#4CAF50'; // Green for low priority
+      default:
+        return '#333'; // Default color
+    }
+  };
 
-        {/* Table Rows */}
-        {items.map((item) => (
-          <View key={item.id} style={styles.tableRow}>
-            <Text style={[styles.cellText, styles.itemCell]}>{item.name}</Text>
-            <Text style={[styles.cellText, styles.quantityCell]}>{item.quantity}</Text>
-            <Text style={[styles.cellText, styles.priceCell]}>${item.price.toFixed(2)}</Text>
-            <Text style={[styles.cellText, styles.categoryCell]}>{item.category || 'N/A'}</Text>
-            <Text style={[styles.cellText, styles.priorityCell, { color: getPriorityColor(item.priority) }]}>
-              {item.priority || 'N/A'}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
+  // Render table header
+  const renderTableHeader = () => (
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerText, styles.columnName]}>Name</Text>
+      <Text style={[styles.headerText, styles.columnQuantity]}>Quantity</Text>
+      <Text style={[styles.headerText, styles.columnPrice]}>Price</Text>
+      <Text style={[styles.headerText, styles.columnCategory]}>Category</Text>
+      <Text style={[styles.headerText, styles.columnPriority]}>Priority</Text>
     </View>
   );
-};
 
-// Helper function to get priority color
-const getPriorityColor = (priority) => {
-  switch (priority) {
-    case 'high':
-      return '#FF4444'; // Red
-    case 'medium':
-      return '#FFA000'; // Yellow/Orange
-    case 'low':
-      return '#4CAF50'; // Green
-    default:
-      return '#666'; // Gray
-  }
+  // Render table row
+  const renderTableRow = ({ item }) => (
+    <View style={styles.tableRow}>
+      <Text style={[styles.cellText, styles.columnName]}>{item.name}</Text>
+      <Text style={[styles.cellText, styles.columnQuantity]}>{item.quantity}</Text>
+      <Text style={[styles.cellText, styles.columnPrice]}>${item.price.toFixed(2)}</Text>
+      <Text style={[styles.cellText, styles.columnCategory]}>{item.category}</Text>
+      <Text
+        style={[
+          styles.cellText,
+          styles.columnPriority,
+          { color: getPriorityColor(item.priority) },
+        ]}
+      >
+        {item.priority}
+      </Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Inventory Items</Text>
+      {renderTableHeader()}
+      <FlatList
+        data={items}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderTableRow}
+      />
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -100,76 +90,48 @@ const styles = StyleSheet.create({
     color: '#6C48C5',
     marginBottom: 16,
   },
-  scrollView: {
-    flex: 1,
-  },
   tableHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#6C48C5',
     paddingVertical: 12,
-    paddingHorizontal: 8,
+    backgroundColor: '#6C48C5',
     borderRadius: 8,
     marginBottom: 8,
-  },
-  headerText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  itemHeader: {
-    flex: 1,
-  },
-  quantityHeader: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  priceHeader: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  categoryHeader: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  priorityHeader: {
-    flex: 1,
-    textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
     paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#EEE',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
+  headerText: {
+    fontWeight: 'bold',
+    color: '#FFFFFF', // White text for header
   },
   cellText: {
-    fontSize: 14,
     color: '#333',
   },
-  itemCell: {
+  columnName: {
     flex: 1,
+    paddingLeft: 8,
   },
-  quantityCell: {
+  columnQuantity: {
     flex: 1,
     textAlign: 'center',
   },
-  priceCell: {
+  columnPrice: {
     flex: 1,
     textAlign: 'center',
   },
-  categoryCell: {
+  columnCategory: {
     flex: 1,
     textAlign: 'center',
   },
-  priorityCell: {
+  columnPriority: {
     flex: 1,
     textAlign: 'center',
-    fontWeight: '600',
+    fontWeight: 'bold', // Make priority text bold
   },
 });
 

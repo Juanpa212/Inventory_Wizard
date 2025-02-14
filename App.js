@@ -95,7 +95,7 @@ function App() {
     <SQLiteProvider databaseName="MainDB.db" onInit={migrateDbIfNeeded}>
       <NavigationContainer>
         <Stack.Navigator 
-          initialRouteName="create"
+          initialRouteName="start_1"
           screenOptions={{
             headerShown: true,
             headerTitle: "App"
