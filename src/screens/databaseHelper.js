@@ -99,6 +99,34 @@ export const initDatabase = async () => {
         FOREIGN KEY(inventory_id) REFERENCES Inventory(id)
       )
     `);
+    //     // Create invoices table
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_number TEXT NOT NULL UNIQUE,
+        date TEXT NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('purchase', 'sale')),
+        total_amount DECIMAL(10,2) NOT NULL,
+        tax_amount DECIMAL(10,2) NOT NULL,
+        total_with_tax DECIMAL(10,2) NOT NULL,
+        notes TEXT
+      )
+    `);
+
+    // Create invoice_items table
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS invoice_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_id INTEGER NOT NULL,
+        item_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        price_per_unit DECIMAL(10,2) NOT NULL,
+        subtotal DECIMAL(10,2) NOT NULL,
+        FOREIGN KEY(invoice_id) REFERENCES invoices(id),
+        FOREIGN KEY(item_id) REFERENCES items(id)
+      )
+    `);
+
 
     console.log("Database initialized and tables created successfully.");
     return db;
@@ -324,24 +352,123 @@ export const updateInventory = async (db, inventory) => {
 
 };
 
+// export const generateInvoiceNumber = async (db) => {
+//   try {
+//     const result = await db.getAllAsync('SELECT COUNT(*) as count FROM invoices');
+//     const count = result[0].count + 1;
+//     const date = new Date();
+//     const year = date.getFullYear();
+//     const month = String(date.getMonth() + 1).padStart(2, '0');
+//     return `INV-${year}${month}-${String(count).padStart(4, '0')}`;
+//   } catch (error) {
+//     console.error("Error generating invoice number:", error);
+//     throw error;
+//   }
+// };
+
 export const generateInvoiceNumber = async (db) => {
   try {
-    const result = await db.getAllAsync('SELECT COUNT(*) as count FROM invoices');
-    const count = result[0].count + 1;
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `INV-${year}${month}-${String(count).padStart(4, '0')}`;
+    let isUnique = false;
+    let invoiceNumber = '';
+    let attempt = 0;
+
+    while (!isUnique && attempt < 10) { // Limit attempts to avoid infinite loops
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const countResult = await db.getAllAsync('SELECT COUNT(*) as count FROM invoices');
+      const count = countResult[0].count + 1;
+      invoiceNumber = `INV-${year}${month}-${String(count).padStart(4, '0')}`;
+
+      // Check if the invoice number already exists
+      const existingInvoice = await db.getAllAsync(
+        'SELECT * FROM invoices WHERE invoice_number = ?',
+        [invoiceNumber]
+      );
+
+      if (existingInvoice.length === 0) {
+        isUnique = true; // Invoice number is unique
+      } else {
+        attempt++; // Try again
+      }
+    }
+
+    if (!isUnique) {
+      throw new Error("Failed to generate a unique invoice number");
+    }
+
+    return invoiceNumber;
   } catch (error) {
     console.error("Error generating invoice number:", error);
     throw error;
   }
 };
 
+// export const createInvoice = async (db, invoiceData) => {
+//   try {
+//     const {
+//       invoice_number,
+//       type,
+//       items,
+//       total_amount,
+//       tax_amount,
+//       total_with_tax,
+//       notes
+//     } = invoiceData;
+
+//     // Insert the invoice
+//     const invoiceResult = await db.runAsync(
+//       `INSERT INTO invoices (
+//         invoice_number, date, type, total_amount, 
+//         tax_amount, total_with_tax, notes
+//       ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+//       [
+//         invoice_number,
+//         new Date().toISOString(),
+//         type,
+//         total_amount,
+//         tax_amount,
+//         total_with_tax,
+//         notes
+//       ]
+//     );
+
+//     const invoiceId = invoiceResult.lastInsertRowId;
+
+//     // Insert all invoice items
+//     for (const item of items) {
+//       await db.runAsync(
+//         `INSERT INTO invoice_items (
+//           invoice_id, item_id, quantity, 
+//           price_per_unit, subtotal
+//         ) VALUES (?, ?, ?, ?, ?)`,
+//         [
+//           invoiceId,
+//           item.id,
+//           item.quantity,
+//           item.price,
+//           item.quantity * item.price
+//         ]
+//       );
+
+//       // Update inventory quantities
+//       const quantityChange = type === 'purchase' ? item.quantity : -item.quantity;
+//       await db.runAsync(
+//         'UPDATE items SET quantity = quantity + ? WHERE id = ?',
+//         [quantityChange, item.id]
+//       );
+//     }
+
+//     return true;
+//   } catch (error) {
+//     console.error("Error creating invoice:", error);
+//     throw error;
+//   }
+// };
+
 export const createInvoice = async (db, invoiceData) => {
   try {
     const {
-      invoice_number,
       type,
       items,
       total_amount,
@@ -349,6 +476,9 @@ export const createInvoice = async (db, invoiceData) => {
       total_with_tax,
       notes
     } = invoiceData;
+
+    // Generate a unique invoice number
+    const invoice_number = await generateInvoiceNumber(db);
 
     // Insert the invoice
     const invoiceResult = await db.runAsync(
@@ -399,7 +529,6 @@ export const createInvoice = async (db, invoiceData) => {
     throw error;
   }
 };
-
 export const getInvoices = async (db) => {
   try {
     return await db.getAllAsync(`
