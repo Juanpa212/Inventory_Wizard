@@ -1,110 +1,71 @@
-import React from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from "react-native";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
-const InvoiceManager = ({ navigation }) => {
+const InvoiceManager = () => {
+  //const [searchText, setSearchText] = useState('');
+  const navigation = useNavigation();
+
+  const invoices = [
+    {
+      id: 12345,
+      time: '5:00pm',
+      type: 'In',
+      items: 5,
+      categories: ['Stickers', 'Art', 'Clothes'],
+      total: 111.50
+    },
+    {
+      id: 32193,
+      time: '8:56pm', 
+      type: 'Out',
+      items: 23,
+      categories: ['Art'],
+      total: 230.00
+    },
+    {
+      id: 89281,
+      time: '10:00am',
+      type: 'Out',
+      items: 2,
+      categories: ['Fashion'],
+      total: 50.00
+    }
+  ];
+
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerButton}>Cancel</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>New Invoice</Text>
-        <TouchableOpacity>
-          <Text style={styles.headerButton}>Save</Text>
+      <Text style={styles.title}>Manage Invoice</Text>
+      <View style={styles.searchContainer}>
+      
+        <TouchableOpacity style={styles.searchButton}>
+          <MaterialCommunityIcons name="magnify" size={24} color="#FFF7F7" />
         </TouchableOpacity>
       </View>
-
-      {/* Scrollable Form */}
-      <ScrollView contentContainerStyle={styles.formContainer}>
-        {/* Customer Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Customer</Text>
-          <View style={styles.inputRow}>
-            <TextInput style={styles.input} placeholder="Customer" />
-            <TouchableOpacity>
-              <MaterialIcons name="more-vert" size={24} color="#6C48C5" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Details Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Details</Text>
-          <View style={styles.detailsContainer}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Invoice #</Text>
-              <TextInput style={styles.inputDetail} placeholder="32726" />
+      <FlatList
+        data={invoices}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.invoiceContainer}>
+            <View>
+              <Text style={styles.invoiceLabel}>Invoice no: {item.id}</Text>
+              <Text style={styles.invoiceLabel}>Time: {item.time}</Text>
+              <Text style={styles.invoiceLabel}>Invoice type: {item.type}</Text>
             </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Currency</Text>
-              <TextInput style={styles.inputDetail} placeholder="$ USD" />
+            <View>
+              <Text style={styles.invoiceLabel}>{item.items} items</Text>
+              <Text style={styles.invoiceLabel}>{item.categories.join(', ')}</Text>
+              <Text style={styles.invoiceLabel}>total = ${item.total.toFixed(2)}</Text>
             </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Date</Text>
-              <TextInput style={styles.inputDetail} placeholder="10 Aug 2022" />
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Due</Text>
-              <TextInput style={styles.inputDetail} placeholder="10 Aug 2022" />
-            </View>
-          </View>
-        </View>
-
-        {/* Tasks Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Comments</Text>
-          <TouchableOpacity style={styles.addButton}>
-            <FontAwesome name="plus-circle" size={20} color="#6C48C5" />
-            <Text style={styles.addButtonText}>Add Comments</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Products Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Products</Text>
-          <TouchableOpacity style={styles.addButton}>
-            <FontAwesome name="plus-circle" size={20} color="#6C48C5" />
-            <Text style={styles.addButtonText}>Add Product</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Summary Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Summary</Text>
-          <View style={styles.summaryContainer}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Sub Total</Text>
-              <Text style={styles.summaryValue}>$0</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Total</Text>
-              <Text style={styles.summaryValue}>$0</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Amount Paid</Text>
-              <Text style={styles.summaryValue}>$0</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, styles.amountDueLabel]}>Amount Due</Text>
-              <Text style={[styles.summaryValue, styles.amountDueValue]}>$0</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Terms & Conditions Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Terms & Conditions</Text>
-          <TextInput
-            style={styles.termsInput}
-            placeholder="Enter terms and conditions..."
-            multiline
-          >
-            Do full payment within 45 days.
-          </TextInput>
-        </View>
-      </ScrollView>
+        )}
+      />
+      <TouchableOpacity style={styles.createButton}onPress = {() => navigation.navigate("createInvoice")}>
+        <Text style={styles.createButtonText}>Create Invoice</Text>
+        <MaterialCommunityIcons name="plus" size={24} color="#FFF7F7" />
+        
+      </TouchableOpacity>
     </View>
   );
 };
@@ -112,119 +73,59 @@ const InvoiceManager = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFF7F7',
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
-  header: {
-    flexDirection: "row",
-    backgroundColor: "#6C48C5",
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    alignItems: "center",
-    justifyContent: "space-between",
+  title: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#6C48C5',
+    marginBottom: 16,
   },
-  headerTitle: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6C48C5',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 16,
   },
-  headerButton: {
-    color: "#FFFFFF",
-    fontSize: 16,
-  },
-  formContainer: {
-    padding: 20,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#6C48C5",
-    marginBottom: 10,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: "#F9FAFB",
-    height: 50,
-  },
-  input: {
+  searchInput: {
     flex: 1,
+    color: '#FFF7F7',
     fontSize: 16,
-    color: "#374151",
   },
-  detailsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+  searchButton: {
+    marginLeft: 8,
   },
-  detailItem: {
-    width: "48%",
-    marginBottom: 15,
+  invoiceContainer: {
+    backgroundColor: '#6C48C5',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  detailLabel: {
+  invoiceLabel: {
+    color: '#FFF7F7',
     fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 5,
+    marginBottom: 4,
   },
-  inputDetail: {
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 40,
-    backgroundColor: "#F9FAFB",
+  createButton: {
+    backgroundColor: '#6C48C5',
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  addButtonText: {
+  createButtonText: {
+    color: '#FFF7F7',
     fontSize: 16,
-    color: "#6C48C5",
-    marginLeft: 10,
-  },
-  summaryContainer: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    padding: 15,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  summaryValue: {
-    fontSize: 14,
-    color: "#000000",
-  },
-  amountDueLabel: {
-    fontWeight: "bold",
-  },
-  amountDueValue: {
-    fontWeight: "bold",
-    color: "#EF4444", // Red to emphasize due amount
-  },
-  termsInput: {
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: "#F9FAFB",
-    fontSize: 14,
-    color: "#374151",
-    minHeight: 80,
-    textAlignVertical: "top",
+    marginLeft: 8,
   },
 });
 

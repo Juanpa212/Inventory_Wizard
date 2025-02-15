@@ -10,7 +10,13 @@ const HomeScreen = ({ navigation }) => {
     { id: "4", title: "Go to Start Screen", screen: "start_1" },
     { id: "5", title: "Go to Add Items Screen", screen: "add" },
     { id: "6", title: "Go to Forgot Password Screen", screen: "pass" },
-    { id: "7", title: "Go to Invoice Manager Screen", screen: "invManager" },
+    { id: "7", title: "Go to Invoice Manager Screen", screen: "invoiceManager" },
+    { id: "8", title: "Go to Help Center Screen", screen: "help"},
+    { id: "9", title: "Go to create Inventory Screen", screen: "inventory"},
+    { id: "10", title: "Go to Stock Levels Screen", screen: "stock"},
+    { id: "11", title: "Go to Create Invoice Screen", screen: "createInvoice"},
+
+
   ];
 
   // Render each button
